@@ -1,3 +1,5 @@
+--Do not add any DML code to this section--
+--Use futhur sql files that purpose--
 
 CREATE TABLE Movies(
 Movie_ID INT IDENTITY(1,1),
@@ -243,3 +245,6 @@ ADD CONSTRAINT FK_UserGenres_User FOREIGN KEY(User_ID) REFERENCES Users(User_ID)
 
 ALTER TABLE UserGenres
 ADD CONSTRAINT FK_UserGenres_Genre FOREIGN KEY(G_ID) REFERENCES Genres(G_ID);
+
+--Do not add any DML code to this section--
+--Use futhur sql files that purpose--
