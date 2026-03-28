@@ -268,8 +268,9 @@ VALUES
 -- ============================================================
 INSERT INTO Admins (A_Username, A_Password)
 VALUES
-    ('superadmin',  '$2b$12$adminHashAAA'),
-    ('mod_priya',   '$2b$12$adminHashBBB');
+    ('Azfar Tauqeer',  '$2b$12$adminHashAAA'),
+    ('Abdullah Saeed',   '$2b$12$adminHashBBB'),
+    ('Omer Farooq', 'Del . B = 0');
 
 -- ============================================================
 -- 7. FRIENDS (U_ID, F_ID — bidirectional pairs)
