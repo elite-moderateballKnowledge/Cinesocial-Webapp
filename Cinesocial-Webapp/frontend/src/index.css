@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #FFD300;
+  --color-secondary: #FF3D00;
+  --color-surface: #F5F5F0;
+  --color-surface-container: #EEEEE9;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-ink: #000000;
+  
+  --font-serif: Georgia, 'Playfair Display Black', serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-ink font-mono;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .neo-border {
+    @apply border-4 border-ink;
+  }
+  
+  .neo-shadow {
+    @apply shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .neo-btn {
+    @apply bg-primary text-ink font-mono font-bold neo-border neo-shadow transition-all duration-100 ease-in-out;
+  }
+  
+  .neo-btn:hover {
+    @apply shadow-none translate-x-[8px] translate-y-[8px];
+  }
+
+  .neo-btn:active {
+    @apply shadow-none translate-x-[8px] translate-y-[8px];
+  }
+
+  .neo-input {
+    @apply bg-surface-container-lowest neo-border px-4 py-2 font-mono outline-none focus:ring-4 focus:ring-primary;
+  }
+
+  .neo-card {
+    @apply bg-surface neo-border neo-shadow p-6;
+  }
+}
