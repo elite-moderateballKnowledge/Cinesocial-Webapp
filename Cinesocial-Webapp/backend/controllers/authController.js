@@ -28,7 +28,7 @@ exports.register = async (req, res) => {
       .input('username', sql.VarChar, username)
       .input('email', sql.VarChar, email)
       .input('password', sql.VarChar, hashedPassword)
-      .query('INSERT INTO Users (Username, Email, Password_hash) VALUES (@username, @email, @password)');
+      .execute('sp_RegisterUser');
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {

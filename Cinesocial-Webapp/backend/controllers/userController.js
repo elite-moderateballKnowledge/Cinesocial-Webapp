@@ -8,11 +8,10 @@ exports.getProfile = async (req, res) => {
     const result = await pool.request()
       .input('userId', sql.Int, userId)
       .query(`
-        SELECT u.User_ID, u.Username, u.Email, u.Join_date, u.Bio, u.sub_ID, u.sub_exp, u.flair_label, u.Profile_Pic_URL,
-               s.Plan_Name, s.Has_Profile_Flair
-        FROM Users u
-        LEFT JOIN Subscriptions s ON u.sub_ID = s.Subscription_ID
-        WHERE u.User_ID = @userId
+        SELECT user_id AS User_ID, username AS Username, Email, Join_date, Bio, sub_ID, sub_expiry AS sub_exp, flair_label, Profile_Pic_URL,
+               plan_name AS Plan_Name, Has_Profile_Flair
+        FROM vw_UserProfile
+        WHERE user_id = @userId
       `);
 
     if (result.recordset.length === 0) {
