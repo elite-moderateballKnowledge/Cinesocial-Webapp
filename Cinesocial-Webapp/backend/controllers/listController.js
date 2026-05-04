@@ -90,3 +90,19 @@ exports.getUserLists = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.getPublicLists = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .query(`
+        SELECT list_id AS List_ID, list_title AS List_Title, owner_username AS Username, movie_count AS total_movies
+        FROM vw_PublicLists
+        ORDER BY total_movies DESC
+      `);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

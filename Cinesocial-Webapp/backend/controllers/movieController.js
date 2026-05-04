@@ -4,7 +4,7 @@ exports.getAllMovies = async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .query('SELECT Movie_ID, Title, M_Type, Release_date, Runtime, Synopsis, M_Language, Poster_URL, Trailer_URL, A_Rating FROM Movies ORDER BY Release_date DESC');
+      .query('SELECT *, avg_rating AS A_Rating FROM vw_MovieSummary ORDER BY Release_date DESC');
     res.json(result.recordset);
   } catch (err) {
     console.error(err);
@@ -86,6 +86,43 @@ exports.searchMovies = async (req, res) => {
         WHERE m.Title LIKE @query 
            OR p.Full_Name LIKE @query
       `);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getPopularByReviews = async (req, res) => {
+  const minReviews = req.params.min || 10;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('minReviews', sql.Int, minReviews)
+      .query(`
+        SELECT m.Movie_ID, m.Title, COUNT(a.Rating) as ReviewCount
+        FROM Movies m 
+        JOIN Activity a ON m.Movie_ID=a.Movie_ID
+        WHERE a.Action_Type = 'REVIEW'
+        GROUP BY m.Movie_ID, m.Title
+        HAVING COUNT(a.Rating) > @minReviews
+      `);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getUnreviewedMovies = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT m.Movie_ID, m.Title, m.A_Rating
+      FROM Activity a
+      RIGHT JOIN Movies m ON a.Movie_ID = m.Movie_ID AND a.Action_Type = 'REVIEW'
+      WHERE a.Activity_ID IS NULL
+    `);
     res.json(result.recordset);
   } catch (err) {
     console.error(err);

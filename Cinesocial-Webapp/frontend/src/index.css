@@ -34,7 +34,7 @@
   }
 
   .neo-btn {
-    @apply bg-primary text-ink font-mono font-bold neo-border neo-shadow transition-all duration-100 ease-in-out;
+    @apply bg-primary text-ink font-mono font-bold border-4 border-ink shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 ease-in-out;
   }
   
   .neo-btn:hover {
@@ -46,10 +46,10 @@
   }
 
   .neo-input {
-    @apply bg-surface-container-lowest neo-border px-4 py-2 font-mono outline-none focus:ring-4 focus:ring-primary;
+    @apply bg-surface-container-lowest border-4 border-ink px-4 py-2 font-mono outline-none focus:ring-4 focus:ring-primary;
   }
 
   .neo-card {
-    @apply bg-surface neo-border neo-shadow p-6;
+    @apply bg-surface border-4 border-ink shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6;
   }
 }

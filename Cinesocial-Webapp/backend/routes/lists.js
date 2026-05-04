@@ -7,5 +7,6 @@ router.get('/watchlist', verifyToken, listController.getWatchlist);
 router.post('/watchlist', verifyToken, listController.addToWatchlist);
 router.get('/user/:id', listController.getUserLists);
 router.get('/my-lists', verifyToken, listController.getUserLists);
+router.get('/public', listController.getPublicLists);
 
 module.exports = router;

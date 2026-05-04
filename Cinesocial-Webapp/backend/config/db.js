@@ -1,13 +1,12 @@
-const sql = require('mssql');
+const sql = require('mssql/msnodesqlv8');
 require('dotenv').config({ path: '../.env' }); // Since it's inside config/
 
 const config = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  server: process.env.DB_SERVER || 'localhost',
+  server: process.env.DB_SERVER || 'localhost\\SQLEXPRESS',
   database: process.env.DB_NAME || 'CineSocial',
+  driver: 'ODBC Driver 17 for SQL Server',
   options: {
-    encrypt: false,
+    trustedConnection: true,
     trustServerCertificate: true,
   }
 };

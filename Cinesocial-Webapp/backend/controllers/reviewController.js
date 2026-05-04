@@ -10,19 +10,37 @@ exports.addReview = async (req, res) => {
 
   try {
     const pool = await poolPromise;
-    await pool.request()
-      .input('userId', sql.Int, userId)
-      .input('movieId', sql.Int, movieId)
-      .input('rating', sql.Decimal(3, 1), rating)
-      .input('reviewText', sql.Text, reviewText)
-      .input('spoiler', sql.Bit, containsSpoiler ? 1 : 0)
-      .input('ip', sql.VarChar, req.ip)
-      .query(`
-        INSERT INTO Activity (User_ID, Action_Type, Movie_ID, Rating, Review_text, Entity_type, Entity_ID, IP_Address, Contains_spoiler, Is_pinned)
-        VALUES (@userId, 'REVIEW', @movieId, @rating, @reviewText, 'Movie', @movieId, @ip, @spoiler, 0)
-      `);
-      
-    res.status(201).json({ message: 'Review added successfully' });
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+    try {
+      const request1 = new sql.Request(transaction);
+      await request1
+        .input('userId', sql.Int, userId)
+        .input('movieId', sql.Int, movieId)
+        .input('rating', sql.Decimal(3, 1), rating)
+        .input('reviewText', sql.Text, reviewText)
+        .input('ip', sql.VarChar, req.ip)
+        .input('spoiler', sql.Bit, containsSpoiler ? 1 : 0)
+        .query(`
+          INSERT INTO Activity (User_ID, Action_Type, Movie_ID, Rating, Review_text, Entity_type, Entity_ID, IP_Address, Contains_spoiler, Is_pinned)
+          VALUES (@userId, 'REVIEW', @movieId, @rating, @reviewText, 'Movie', @movieId, @ip, @spoiler, 0)
+        `);
+
+      const request2 = new sql.Request(transaction);
+      await request2
+        .input('movieId', sql.Int, movieId)
+        .query(`
+          UPDATE Movies 
+          SET A_Rating = (SELECT AVG(Rating) FROM Activity WHERE Movie_ID = @movieId AND Action_Type = 'REVIEW')
+          WHERE Movie_ID = @movieId
+        `);
+        
+      await transaction.commit();
+      res.status(201).json({ message: 'Review added successfully' });
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -73,11 +91,10 @@ exports.getMovieReviews = async (req, res) => {
     const result = await pool.request()
       .input('movieId', sql.Int, movieId)
       .query(`
-        SELECT a.*, u.Username, u.Profile_Pic_URL 
-        FROM Activity a
-        JOIN Users u ON a.User_ID = u.User_ID
-        WHERE a.Action_Type = 'REVIEW' AND a.Movie_ID = @movieId
-        ORDER BY a.Is_pinned DESC, a.Time_stamp DESC
+        SELECT activity_id AS Activity_ID, movie_id AS Movie_ID, reviewer_username AS Username, rating AS Rating, review_text AS Review_text, is_pinned AS Is_pinned, timestamp AS Time_stamp, Profile_Pic_URL 
+        FROM vw_CommunityVerdicts
+        WHERE movie_id = @movieId
+        ORDER BY is_pinned DESC, timestamp DESC
       `);
     res.json(result.recordset);
   } catch (err) {
