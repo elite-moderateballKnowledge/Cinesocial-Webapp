@@ -1,18 +1,32 @@
 import { useState } from 'react';
 import MovieCard from '../components/MovieCard';
+import { apiRequest, getErrorMessage } from '../lib/api';
 
 export default function Search() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!query) return;
-    const res = await fetch(`http://localhost:5000/api/movies/search?q=${query}`);
-    const data = await res.json();
-    setResults(data);
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return;
+
+    setLoading(true);
+    setError('');
     setSearched(true);
+
+    try {
+      const data = await apiRequest(`/movies/search?q=${encodeURIComponent(trimmedQuery)}`);
+      setResults(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setResults([]);
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,10 +41,18 @@ export default function Search() {
           placeholder="Search by title, actor, or director..." 
           className="neo-input flex-1 text-2xl py-4 bg-surface-container-lowest"
         />
-        <button type="submit" className="neo-btn px-12 text-2xl py-4">GO</button>
+        <button type="submit" className="neo-btn px-12 text-2xl py-4" disabled={loading}>
+          {loading ? 'SEARCHING' : 'GO'}
+        </button>
       </form>
 
-      {searched && results.length === 0 && (
+      {error && (
+        <div className="font-mono font-black text-xl p-8 mb-8 bg-surface-container border-4 border-ink">
+          SEARCH FAILED: {error}
+        </div>
+      )}
+
+      {searched && !loading && !error && results.length === 0 && (
         <div className="text-3xl font-mono font-black p-12 bg-surface-container border-4 border-ink text-center">
           NO MATCHES FOUND.
         </div>

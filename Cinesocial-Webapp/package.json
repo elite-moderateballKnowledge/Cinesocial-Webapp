@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "scripts": {
+    "seed": "npm --prefix backend run seed --"
+  }
+}

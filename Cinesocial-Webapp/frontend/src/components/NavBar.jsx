@@ -1,28 +1,68 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import Logo from './Logo';
+
+function NavLink({ to, children }) {
+  const { pathname } = useLocation();
+  const active = pathname === to || (to !== '/' && pathname.startsWith(to));
+  return (
+    <Link
+      to={to}
+      className="relative font-bold transition-all duration-150 px-1 py-0.5"
+      style={{
+        fontFamily: 'var(--font-display)',
+        color: active ? '#000' : '#000',
+        textDecoration: 'none',
+      }}
+    >
+      {active && (
+        <span
+          className="absolute inset-0 -z-10"
+          style={{ backgroundColor: '#FFD300', transform: 'rotate(-1deg)', borderRadius: '2px' }}
+        />
+      )}
+      <span className={active ? 'relative' : 'hover:underline decoration-4 underline-offset-4'}>
+        {children}
+      </span>
+    </Link>
+  );
+}
 
 export default function NavBar() {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="border-b-4 border-ink bg-primary px-8 py-4 flex justify-between items-center sticky top-0 z-50">
-      <Link to="/" className="text-3xl font-serif font-black tracking-tighter text-primary hover:scale-105 transition-transform" style={{ WebkitTextStroke: '2px black' }}>
-        CINE
-      </Link>
-      <div className="flex gap-6 font-mono font-bold items-center text-ink">
-        <Link to="/movies" className="hover:underline decoration-4 underline-offset-4">MOVIES</Link>
-        <Link to="/search" className="hover:underline decoration-4 underline-offset-4">SEARCH</Link>
+    <nav
+      className="border-b-4 border-ink px-8 py-4 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center sticky top-0 z-50"
+      style={{ backgroundColor: '#FFD300' }}
+    >
+      {/* Brand */}
+      <Logo variant="dark" />
+
+      {/* Links */}
+      <div className="flex gap-5 md:gap-7 items-center flex-wrap text-sm">
+        <NavLink to="/movies">MOVIES</NavLink>
+        <NavLink to="/search">SEARCH</NavLink>
+        <NavLink to="/articles">ESSAYS</NavLink>
+        <NavLink to="/members">MEMBERS</NavLink>
         {user ? (
           <>
-            <Link to="/lists" className="hover:underline decoration-4 underline-offset-4">LISTS</Link>
-            <Link to="/parties" className="hover:underline decoration-4 underline-offset-4">PARTIES</Link>
-            <Link to="/profile" className="hover:underline decoration-4 underline-offset-4">PROFILE</Link>
-            <button onClick={logout} className="neo-btn px-6 py-2 text-sm bg-surface rounded-full">LOGOUT</button>
+            <NavLink to="/lists">LISTS</NavLink>
+            <NavLink to="/parties">PARTIES</NavLink>
+            <NavLink to="/profile">PROFILE</NavLink>
+            <button
+              onClick={logout}
+              className="neo-btn px-5 py-1.5 text-sm"
+            >
+              LOGOUT
+            </button>
           </>
         ) : (
           <>
-            <Link to="/login" className="hover:underline decoration-4 underline-offset-4">LOGIN</Link>
-            <Link to="/register" className="neo-btn px-6 py-2 text-sm bg-surface rounded-full">JOIN</Link>
+            <NavLink to="/login">LOGIN</NavLink>
+            <Link to="/register" className="neo-btn px-5 py-1.5 text-sm">
+              JOIN
+            </Link>
           </>
         )}
       </div>

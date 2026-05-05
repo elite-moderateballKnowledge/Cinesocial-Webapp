@@ -1,25 +1,29 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { apiRequest, getErrorMessage } from '../lib/api';
 
 export default function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch('http://localhost:5000/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password })
-    });
-    const data = await res.json();
-    if (res.ok) {
+    setSubmitting(true);
+    try {
+      await apiRequest('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
       alert('Registration successful! Please login.');
       navigate('/login');
-    } else {
-      alert(data.message);
+    } catch (err) {
+      alert(getErrorMessage(err));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -58,8 +62,16 @@ export default function Register() {
               required 
             />
           </div>
-          <button type="submit" className="neo-btn py-4 text-2xl mt-8">REGISTER</button>
+          <button type="submit" className="neo-btn py-4 text-2xl mt-8" disabled={submitting}>
+            {submitting ? 'REGISTERING' : 'REGISTER'}
+          </button>
         </form>
+        <div className="mt-8 pt-6 border-t-4 border-ink font-mono font-bold text-lg">
+          <span>ALREADY HAVE AN ACCOUNT?</span>{' '}
+          <Link to="/login" className="underline decoration-4 underline-offset-4">
+            LOGIN
+          </Link>
+        </div>
       </div>
     </div>
   );

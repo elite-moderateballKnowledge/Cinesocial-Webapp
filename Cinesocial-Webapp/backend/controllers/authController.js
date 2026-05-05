@@ -69,6 +69,22 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // UC-08 (F20) Subscription Expiry Check
+    if (user.sub_ID && user.sub_exp) {
+      if (new Date(user.sub_exp) < new Date()) {
+        // Subscription expired
+        await pool.request()
+          .input('userId', sql.Int, user.User_ID)
+          .query('UPDATE Users SET is_valid = 0 WHERE User_ID = @userId AND sub_exp < GETDATE() AND sub_ID IS NOT NULL');
+          
+        await pool.request()
+          .input('userId', sql.Int, user.User_ID)
+          .query("INSERT INTO Activity (User_ID, Action_Type, Details) VALUES (@userId, 'SUBSCRIPTION_EXPIRED', 'Subscription expired automatically')");
+          
+        return res.status(403).json({ message: 'Your subscription has expired. Account access is revoked.' });
+      }
+    }
+
     const payload = {
       userId: user.User_ID,
       role: 'user'
@@ -76,10 +92,10 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-    // Update last_login
+    // Update last_login (UC-02 / Q1)
     await pool.request()
-      .input('userId', sql.Int, user.User_ID)
-      .query('UPDATE Users SET last_login = GETDATE() WHERE User_ID = @userId');
+      .input('UsersID', sql.Int, user.User_ID)
+      .execute('Q1');
 
     res.json({ token, user: { id: user.User_ID, username: user.Username, email: user.Email } });
   } catch (err) {

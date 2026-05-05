@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Logo from './Logo';
 
 export default function Footer() {
   return (
@@ -24,10 +25,16 @@ export default function Footer() {
           <Link to="/privacy" className="hover:underline decoration-4 underline-offset-4">PRIVACY</Link>
         </div>
       </div>
-      <div className="mt-12 text-center">
-         <span className="font-serif font-black text-6xl text-primary" style={{ WebkitTextStroke: '2px black' }}>
-          CINE
-         </span>
+      <div className="mt-12 flex justify-center relative">
+         <Logo variant="light" className="text-5xl md:text-6xl" />
+         
+         {/* Discreet Admin Link */}
+         <Link 
+           to="/admin/login" 
+           className="absolute bottom-0 right-0 text-[10px] text-gray-500 hover:text-gray-400 opacity-50 hover:opacity-100 transition-opacity"
+         >
+           ADMIN
+         </Link>
       </div>
     </footer>
   );

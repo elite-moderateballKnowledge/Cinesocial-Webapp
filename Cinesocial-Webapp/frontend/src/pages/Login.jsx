@@ -1,26 +1,30 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { apiRequest, getErrorMessage } from '../lib/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (res.ok) {
+    setSubmitting(true);
+    try {
+      const data = await apiRequest('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
       login(data.user, data.token);
       navigate('/');
-    } else {
-      alert(data.message);
+    } catch (err) {
+      alert(getErrorMessage(err));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -49,8 +53,16 @@ export default function Login() {
               required 
             />
           </div>
-          <button type="submit" className="neo-btn py-4 text-2xl mt-8">ENTER</button>
+          <button type="submit" className="neo-btn py-4 text-2xl mt-8" disabled={submitting}>
+            {submitting ? 'ENTERING' : 'ENTER'}
+          </button>
         </form>
+        <div className="mt-8 pt-6 border-t-4 border-ink font-mono font-bold text-lg">
+          <span>NO ACCOUNT?</span>{' '}
+          <Link to="/register" className="underline decoration-4 underline-offset-4">
+            JOIN CINE SOCIAL
+          </Link>
+        </div>
       </div>
     </div>
   );
