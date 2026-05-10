@@ -201,3 +201,101 @@ exports.updateGenrePreferences = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// ─── Favourite Movies ────────────────────────────────────────────────────────
+exports.getFavouriteMovies = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT fm.Rank, m.Movie_ID, m.Title, m.Poster_URL, m.A_Rating, m.Release_date
+        FROM FavouriteMovies fm
+        JOIN Movies m ON fm.Movie_ID = m.Movie_ID
+        WHERE fm.User_ID = @userId
+        ORDER BY fm.Rank ASC
+      `);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('getFavouriteMovies:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// PUT: set (replace) the logged-in user's 3 favourite movies
+// expects body: { favourites: [{ movieId, rank }] }  — rank is 1, 2, or 3
+exports.setFavouriteMovies = async (req, res) => {
+  const userId = req.user.userId;
+  const { favourites } = req.body;
+
+  // Validate — ISP: only check what this function cares about
+  if (!Array.isArray(favourites) || favourites.length > 3) {
+    return res.status(400).json({ message: 'favourites must be an array of up to 3 items.' });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+
+    try {
+      // Wipe existing favourites first
+      await transaction.request()
+        .input('userId', sql.Int, userId)
+        .query('DELETE FROM FavouriteMovies WHERE User_ID = @userId');
+
+      // Insert each one — OCP: adding a 4th favourite later only changes this loop limit
+      for (const { movieId, rank } of favourites) {
+        await transaction.request()
+          .input('userId', sql.Int, userId)
+          .input('movieId', sql.Int, movieId)
+          .input('rank', sql.Int, rank)
+          .query(`
+            INSERT INTO FavouriteMovies (User_ID, Movie_ID, Rank)
+            VALUES (@userId, @movieId, @rank)
+          `);
+      }
+
+      await transaction.commit();
+      res.json({ message: 'Favourite movies updated.' });
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
+  } catch (err) {
+    console.error('setFavouriteMovies:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ─── Mutual Friends ───────────────────────────────────────────────────────────
+
+// GET: returns friends that both the logged-in user and the target user share
+exports.getMutualFriends = async (req, res) => {
+  const myId = req.user.userId;        // comes from verifyToken (Proxy pattern)
+  const theirId = req.params.id;
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('myId', sql.Int, myId)
+      .input('theirId', sql.Int, theirId)
+      .query(`
+        SELECT u.User_ID, u.Username, u.Profile_Pic_URL, u.flair_label
+        FROM Friends f1
+        JOIN Friends f2 ON f1.F_ID = f2.F_ID
+        JOIN Users u   ON f1.F_ID  = u.User_ID
+        WHERE f1.U_ID = @myId
+          AND f2.U_ID = @theirId
+          AND u.is_valid = 1
+      `);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('getMutualFriends:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
