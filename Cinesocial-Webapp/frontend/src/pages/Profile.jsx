@@ -15,6 +15,11 @@ export default function Profile() {
   const [flair, setFlair] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [favMovies, setFavMovies]       = useState([]);      // the 3 favourite movies
+  const [mutuals, setMutuals]           = useState([]);      // mutual friends
+  const [movieSearch, setMovieSearch]   = useState('');      // search input in picker
+  const [searchResults, setSearchResults] = useState([]);    // picker results
+  const [savingFavs, setSavingFavs]     = useState(false);
 
   // If we are viewing a specific ID and it's not the current user's ID
   const isMe = !id || id === 'me' || (user && user.userId == id);
@@ -39,6 +44,23 @@ export default function Profile() {
         setBio(data.Bio || '');
         setFlair(data.flair_label || '');
         setError('');
+
+        // Fetch favourite movies for this profile (public endpoint)
+        const targetId = id && id !== 'me' ? id : data.user_id ?? data.User_ID;
+        try {
+        const favs = await apiRequest(`/users/${targetId}/favourites`);
+        if (!ignore) setFavMovies(favs);
+        } catch { /* non-fatal — section just stays empty */ }
+
+        // Fetch mutual friends only when viewing someone else's profile
+        if (!isMe && user) {
+        try {
+            const mutualsData = await apiRequest(`/users/${targetId}/mutuals`, {
+            headers: authHeaders()
+            });
+            if (!ignore) setMutuals(mutualsData);
+        } catch { /* non-fatal */ }
+        }
       } catch (err) {
         if (!ignore) {
           setProfile(null);
@@ -80,6 +102,34 @@ export default function Profile() {
     );
   }
   if (!profile) return <div className="text-4xl font-mono font-black animate-pulse">LOADING...</div>;
+  // Facade over apiRequest — keeps JSX clean (ISP: components only get what they need)
+    const searchMovies = async (query) => {
+    if (!query.trim()) { setSearchResults([]); return; }
+    try {
+        const results = await apiRequest(`/movies/search?q=${encodeURIComponent(query)}`);
+        setSearchResults(results.slice(0, 6)); // cap at 6 results
+    } catch { setSearchResults([]); }
+    };
+
+    const saveFavourites = async (updatedFavs) => {
+    setSavingFavs(true);
+    try {
+        await apiRequest('/users/me/favourites', {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+            favourites: updatedFavs.map((m, i) => ({ movieId: m.Movie_ID, rank: i + 1 }))
+        })
+        });
+        setFavMovies(updatedFavs);
+    } catch (err) {
+        alert(getErrorMessage(err));
+    } finally {
+        setSavingFavs(false);
+        setSearchResults([]);
+        setMovieSearch('');
+    }
+    };
 
   return (
     <div>
@@ -312,6 +362,127 @@ export default function Profile() {
             <p className="font-mono text-xl">No parties attended yet.</p>
           )}
         </section>
+        {/* ── FAVOURITE MOVIES ──────────────────────────────────────────────────── */}
+        <section>
+          <h2 className="text-4xl font-serif font-black mb-6 border-b-4 border-ink pb-2">
+            FAVOURITE FILMS
+          </h2>
+
+          <div className="flex gap-6 flex-wrap mb-6">
+            {[0, 1, 2].map(slot => {
+              const movie = favMovies[slot];
+              return (
+                <div key={slot} className="flex flex-col items-center gap-2 w-36">
+                  <div
+                    className="w-36 h-52 border-4 border-ink overflow-hidden bg-surface-container flex items-center justify-center"
+                    style={{ boxShadow: '4px 4px 0 0 #FFD300' }}
+                  >
+                    {movie ? (
+                      <ImageWithFallback
+                        src={movie.Poster_URL}
+                        alt={movie.Title}
+                        className="w-full h-full object-cover"
+                        fallbackText={movie.Title}
+                      />
+                    ) : (
+                      <span className="font-black text-4xl opacity-20">{slot + 1}</span>
+                    )}
+                  </div>
+                  {movie && (
+                    <span className="font-mono font-bold text-xs text-center line-clamp-2">
+                      {movie.Title}
+                    </span>
+                  )}
+                  {isMe && movie && (
+                    <button
+                      onClick={() => saveFavourites(favMovies.filter((_, i) => i !== slot))}
+                      className="text-xs font-bold text-red-600 hover:underline"
+                    >
+                      REMOVE
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {isMe && favMovies.length < 3 && (
+            <div className="neo-card p-6 flex flex-col gap-4 max-w-lg">
+              <h3 className="font-serif font-black text-xl">
+                ADD FAVOURITE ({favMovies.length}/3)
+              </h3>
+              <input
+                type="text"
+                className="neo-input text-base"
+                placeholder="Search for a movie..."
+                value={movieSearch}
+                onChange={e => {
+                  setMovieSearch(e.target.value);
+                  searchMovies(e.target.value);
+                }}
+              />
+              {searchResults.length > 0 && (
+                <div className="flex flex-col border-4 border-ink divide-y-4 divide-ink">
+                  {searchResults.map(m => (
+                    <button
+                      key={m.Movie_ID}
+                      disabled={savingFavs || favMovies.some(f => f.Movie_ID === m.Movie_ID)}
+                      onClick={() => saveFavourites([...favMovies, m])}
+                      className="flex items-center gap-4 p-3 text-left hover:bg-surface-container transition-colors disabled:opacity-40"
+                    >
+                      <div className="w-10 h-14 border-2 border-ink overflow-hidden shrink-0 bg-surface-container">
+                        <ImageWithFallback
+                          src={m.Poster_URL}
+                          alt={m.Title}
+                          className="w-full h-full object-cover"
+                          fallbackText={m.Title}
+                        />
+                      </div>
+                      <span className="font-mono font-bold text-sm">{m.Title}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* ── MUTUAL FRIENDS ─────────────────────────────────────────────────────── */}
+        {!isMe && mutuals.length > 0 && (
+          <section>
+            <h2 className="text-4xl font-serif font-black mb-6 border-b-4 border-ink pb-2">
+              MUTUAL FRIENDS
+              <span className="ml-3 text-xl font-mono opacity-60">({mutuals.length})</span>
+            </h2>
+            <div className="flex gap-4 overflow-x-auto pb-4">
+              {mutuals.map(f => (
+                <Link
+                  key={f.User_ID}
+                  to={`/profile/${f.User_ID}`}
+                  className="neo-card p-4 flex flex-col items-center gap-3 min-w-[140px] shrink-0 hover:bg-surface-container"
+                >
+                  <div className="w-14 h-14 border-4 border-ink overflow-hidden rounded-full">
+                    <ImageWithFallback
+                      src={f.Profile_Pic_URL}
+                      alt={f.Username}
+                      fallbackText={f.Username?.[0]?.toUpperCase() || '?'}
+                      isAvatar
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold font-mono text-sm">{f.Username}</div>
+                    {f.flair_label && (
+                      <div className="text-xs bg-secondary text-white px-2 mt-1">
+                        {f.flair_label}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
