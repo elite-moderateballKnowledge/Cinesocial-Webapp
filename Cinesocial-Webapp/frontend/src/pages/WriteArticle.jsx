@@ -10,7 +10,7 @@ export default function WriteArticle() {
   const navigate = useNavigate();
   const [isCinephile, setIsCinephile] = useState(null); // null = checking
   const [form, setForm] = useState({
-    title: '', body: '', cover_image_url: '', movie_id: '', category: 'ESSAY',
+    title: '', body: '', cover_image_url: '', movie_id: '', category: 'ESSAY', is_nsfw: false,
   });
   const [movieQuery, setMovieQuery] = useState('');
   const [movieResults, setMovieResults] = useState([]);
@@ -73,6 +73,7 @@ export default function WriteArticle() {
           cover_image_url: form.cover_image_url || undefined,
           movie_id: form.movie_id || undefined,
           category: form.category,
+          is_nsfw: form.is_nsfw,
         }),
       });
       const data = await res.json();
@@ -133,7 +134,7 @@ export default function WriteArticle() {
       </p>
       <div className="flex gap-4 justify-center flex-wrap">
         <Link to="/articles" className="neo-btn px-8 py-3">BROWSE ESSAYS</Link>
-        <button onClick={() => { setSubmitted(false); setForm({ title: '', body: '', cover_image_url: '', movie_id: '', category: 'ESSAY' }); setSelectedMovie(null); setMovieQuery(''); }}
+        <button onClick={() => { setSubmitted(false); setForm({ title: '', body: '', cover_image_url: '', movie_id: '', category: 'ESSAY', is_nsfw: false }); setSelectedMovie(null); setMovieQuery(''); }}
           className="border-4 border-ink px-8 py-3 font-black hover:bg-primary transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
           WRITE ANOTHER
         </button>
@@ -226,6 +227,21 @@ export default function WriteArticle() {
                 className="ml-auto text-xs font-black opacity-70 hover:opacity-100">✕</button>
             </div>
           )}
+        </div>
+
+        {/* NSFW Toggle */}
+        <div className="flex items-center gap-3">
+          <input 
+            type="checkbox" 
+            name="is_nsfw" 
+            id="is_nsfw"
+            checked={form.is_nsfw} 
+            onChange={e => setForm(p => ({ ...p, is_nsfw: e.target.checked }))}
+            className="w-6 h-6 border-4 border-ink accent-ink cursor-pointer"
+          />
+          <label htmlFor="is_nsfw" className="text-sm font-black tracking-widest cursor-pointer" style={{ fontFamily: 'var(--font-mono)' }}>
+            MARK AS NSFW <span className="opacity-50 font-normal">(Contains mature content)</span>
+          </label>
         </div>
 
         {/* Body */}

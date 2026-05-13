@@ -9,6 +9,16 @@ router.post('/logout', (req, res) => res.status(200).json({ message: 'Logged out
 
 router.get('/stats',        verifyAdminToken, adminController.getStats);
 
+// ── Articles ──────────────────────────────────────────────────────────────
+router.get('/articles/pending', verifyAdminToken, articleController.getPendingArticles);
+router.get('/articles', verifyAdminToken, adminController.getAllArticles);
+router.post('/articles/:id/approve', verifyAdminToken, articleController.approveArticle);
+router.post('/articles/:id/reject', verifyAdminToken, articleController.rejectArticle);
+
+// ── Settings ──────────────────────────────────────────────────────────────
+router.get('/settings', verifyAdminToken, adminController.getSettings);
+router.put('/settings', verifyAdminToken, adminController.updateSettings);
+
 // ── User Management ──────────────────────────────────────────
 router.get('/users',        verifyAdminToken, adminController.getUsers);
 router.post('/users/:id/ban', verifyAdminToken, adminController.banUserById);
@@ -38,5 +48,9 @@ router.get('/articles/pending', verifyAdminToken, articleController.getPendingAr
 router.post('/articles/:id/approve', verifyAdminToken, articleController.approveArticle);
 // POST /api/admin/articles/:id/reject
 router.post('/articles/:id/reject', verifyAdminToken, articleController.rejectArticle);
+
+// ── Analytics ───────────────────────────────────────────────
+router.get('/analytics/actor', verifyAdminToken, adminController.getAnalyticsByActor);
+router.get('/analytics/year', verifyAdminToken, adminController.getAnalyticsByYear);
 
 module.exports = router;

@@ -487,6 +487,7 @@ The Articles feature enables Cinephile (Premium) users to write long-form cinema
 | `Rejection_Note` | TEXT NULL | Admin's reason if rejected |
 | `Movie_ID` | INT NULL | FK → `Movies.Movie_ID` (optional link) |
 | `Category` | VARCHAR(50) | `REVIEW` \| `ESSAY` \| `EDITORIAL` \| `ANALYSIS` \| `HOT TAKE` |
+| `Is_NSFW` | BIT | Flag indicating mature/18+ content |
 | `Created_At` | DATETIME | Submission timestamp |
 | `Published_At` | DATETIME NULL | Set when admin approves |
 | `Updated_At` | DATETIME | Last edit timestamp |
@@ -530,7 +531,7 @@ END;
 **Purpose:** Returns all approved articles joined with author username/flair and optional linked movie title. Used as the primary data source for the public articles listing and detail pages.
 **Used in:** `backend/controllers/articleController.js → getPublishedArticles()`, `getArticleBySlug()`
 **Called by routes:** `GET /api/articles`, `GET /api/articles/:slug`
-**Columns returned:** `Article_ID, Author_ID, Title, Slug, Body, Cover_Image_URL, Status, Movie_ID, Category, Created_At, Published_At, Updated_At, View_Count, Username, flair_label, Movie_Title`
+**Columns returned:** `Article_ID, Author_ID, Title, Slug, Body, Cover_Image_URL, Status, Movie_ID, Category, Is_NSFW, Created_At, Published_At, Updated_At, View_Count, Username, flair_label, Movie_Title`
 
 ```sql
 CREATE VIEW vw_PublishedArticles AS
@@ -542,6 +543,40 @@ JOIN Users u ON a.Author_ID = u.User_ID
 LEFT JOIN Movies m ON a.Movie_ID = m.Movie_ID
 WHERE a.Status = 'approved';
 ```
+
+---
+
+### TABLE: Article_Comments
+
+**File:** `database/new_queries.sql`
+**Purpose:** Stores text-only comments on published articles left by basic or premium users.
+
+| Column | Type | Description |
+|---|---|---|
+| `Comment_ID` | INT IDENTITY PK | Auto-incrementing primary key |
+| `Article_ID` | INT NOT NULL | FK → `Articles.Article_ID` |
+| `User_ID` | INT NOT NULL | FK → `Users.User_ID` |
+| `Comment_Text` | TEXT NOT NULL | The content of the comment |
+| `Created_At` | DATETIME | When the comment was posted |
+
+**Constraints:**
+- `FK_Comments_Article` → `Articles(Article_ID)`
+- `FK_Comments_User` → `Users(User_ID)`
+
+---
+
+## SYSTEM CONFIGURATION
+
+### TABLE: System_Settings
+
+**File:** `database/new_queries.sql`
+**Purpose:** Stores site-wide configurable key-value pairs (e.g. Maintenance Mode) editable by Admins.
+
+| Column | Type | Description |
+|---|---|---|
+| `Setting_Key` | VARCHAR(50) PK | Unique identifier for the setting |
+| `Setting_Value` | VARCHAR(MAX) | String representation of the value (e.g., 'true') |
+| `Updated_At` | DATETIME | Timestamp of last modification |
 
 ---
 
@@ -586,3 +621,23 @@ The Friends system supports proper request-based friendship: a sender issues a r
 **Used in:** `backend/controllers/friendController.js → getFriends()`
 **Called by routes:** `GET /api/friends`, profile page friends section
 **Columns:** `User_ID, Friend_Username, Friend_ID, flair_label, Profile_Pic_URL, has_premium_flair`
+
+---
+
+## ADMIN ANALYTICS
+**Implemented by: Abdullah Saeed 24L3056**
+
+### sp_Analytics_MoviesByActor
+**File:** database/new_queries.sql
+**Purpose:** Groups movies by actors and calculates total movies, average rating, and total reviews per actor. Uses pagination.
+**Parameters:** @Offset INT, @Limit INT
+**Used in:** backend/controllers/adminController.js → getAnalyticsByActor()
+**Called by route:** GET /api/admin/analytics/actor
+
+### sp_Analytics_MoviesByYear
+**File:** database/new_queries.sql
+**Purpose:** Groups movies by their release year and calculates total movies, average rating, and total reviews for that year. Uses pagination.
+**Parameters:** @Offset INT, @Limit INT
+**Used in:** backend/controllers/adminController.js → getAnalyticsByYear()
+**Called by route:** GET /api/admin/analytics/year
+

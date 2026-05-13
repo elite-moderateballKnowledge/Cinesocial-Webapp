@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import ArticleCard from '../components/ArticleCard';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
@@ -31,8 +32,12 @@ function ArticleBody({ text }) {
 export default function ArticleDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [data, setData] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
+  const [submittingComment, setSubmittingComment] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -40,7 +45,17 @@ export default function ArticleDetail() {
     setLoading(true); setError(null);
     fetch(`${API}/api/articles/${slug}`)
       .then(r => { if (!r.ok) throw new Error(r.status === 404 ? 'Article not found.' : 'Failed to load.'); return r.json(); })
-      .then(j => { if (!cancelled) { setData(j); setLoading(false); } })
+      .then(j => { 
+        if (!cancelled) { 
+          setData(j); 
+          // Fetch comments
+          fetch(`${API}/api/articles/${slug}/comments`)
+            .then(rc => rc.ok ? rc.json() : [])
+            .then(cj => { if(!cancelled) setComments(cj); })
+            .catch(() => {});
+          setLoading(false); 
+        } 
+      })
       .catch(e => { if (!cancelled) { setError(e.message); setLoading(false); } });
     return () => { cancelled = true; };
   }, [slug]);
@@ -61,6 +76,29 @@ export default function ArticleDetail() {
     </div>
   );
 
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    setSubmittingComment(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/api/articles/${slug}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ text: newComment }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setComments([result.comment, ...comments]);
+        setNewComment('');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
   const { article, related } = data;
   const catColor = CATEGORY_COLORS[article.Category] ?? '#FFD300';
 
@@ -76,9 +114,17 @@ export default function ArticleDetail() {
         <div className="absolute inset-0"
           style={{ background: article.Cover_Image_URL ? 'linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.2) 60%,transparent 100%)' : 'rgba(0,0,0,0.08)' }} />
         <div className="relative z-10 p-8 md:p-12 w-full">
-          <div className="inline-block px-3 py-1 border-2 border-ink text-xs font-black tracking-widest mb-4"
-            style={{ backgroundColor: catColor, fontFamily: 'var(--font-display)' }}>
-            {article.Category}
+          <div className="flex gap-2 mb-4">
+            <div className="inline-block px-3 py-1 border-2 border-ink text-xs font-black tracking-widest"
+              style={{ backgroundColor: catColor, fontFamily: 'var(--font-display)' }}>
+              {article.Category}
+            </div>
+            {article.Is_NSFW && (
+              <div className="inline-block px-3 py-1 border-2 border-red-500 text-red-500 text-xs font-black tracking-widest bg-red-500/10"
+                style={{ fontFamily: 'var(--font-display)' }}>
+                NSFW
+              </div>
+            )}
           </div>
           <h1 className="text-4xl md:text-6xl font-black leading-tight max-w-3xl"
             style={{
@@ -119,8 +165,61 @@ export default function ArticleDetail() {
 
           <div className="mb-12"><ArticleBody text={article.Body} /></div>
 
+          {/* Comments Section */}
+          <div className="mt-16 border-t-4 border-ink pt-8">
+            <h2 className="text-2xl font-black mb-6" style={{ fontFamily: 'var(--font-serif)' }}>DISCUSSION ({comments.length})</h2>
+            
+            {user ? (
+              <form onSubmit={handleAddComment} className="mb-8 flex gap-3">
+                <input 
+                  type="text" 
+                  value={newComment} 
+                  onChange={e => setNewComment(e.target.value)} 
+                  placeholder="Share your thoughts..." 
+                  className="flex-1 neo-input py-3"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                />
+                <button 
+                  type="submit" 
+                  disabled={submittingComment || !newComment.trim()}
+                  className="neo-btn px-6 disabled:opacity-50"
+                  style={{ backgroundColor: '#FFD300', color: '#000' }}>
+                  POST
+                </button>
+              </form>
+            ) : (
+              <div className="mb-8 p-4 border-2 border-ink bg-surface-container text-sm font-bold text-center" style={{ fontFamily: 'var(--font-mono)' }}>
+                <Link to="/login" className="text-primary underline">LOG IN</Link> TO JOIN THE DISCUSSION
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {comments.length === 0 ? (
+                <p className="opacity-50 text-sm" style={{ fontFamily: 'var(--font-mono)' }}>No comments yet. Be the first!</p>
+              ) : (
+                comments.map(c => (
+                  <div key={c.Comment_ID} className="border-2 border-ink p-4 flex gap-4">
+                    <div className="w-10 h-10 border-2 border-ink flex items-center justify-center font-black flex-shrink-0" style={{ backgroundColor: '#FFD300' }}>
+                      {c.Username?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold font-mono text-sm">{c.Username}</span>
+                        {c.flair_label && (
+                          <span className="px-1 border border-ink text-[10px] font-black bg-ink text-surface">{c.flair_label}</span>
+                        )}
+                        <span className="text-xs opacity-50 ml-2">{formatDate(c.Created_At)}</span>
+                      </div>
+                      <p className="text-sm leading-relaxed" style={{ fontFamily: 'var(--font-mono)' }}>{c.Comment_Text}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
           <Link to="/articles"
-            className="inline-block border-4 border-ink px-6 py-3 font-black text-sm hover:bg-primary transition-colors duration-150"
+            className="inline-block border-4 border-ink px-6 py-3 font-black text-sm hover:bg-primary transition-colors duration-150 mt-12"
             style={{ fontFamily: 'var(--font-display)' }}>
             ← ALL ESSAYS
           </Link>

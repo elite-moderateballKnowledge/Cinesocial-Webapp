@@ -978,3 +978,104 @@ GO
 -- dependencies (e.g. existing reviews/activity)
 -- ALTER TABLE Movies ADD is_hidden BIT DEFAULT 0;
 -- GO
+-- -------------------------------------------------------------
+-- ADMIN ANALYTICS: Movies by Actor
+-- -------------------------------------------------------------
+CREATE PROCEDURE sp_Analytics_MoviesByActor
+    @Offset INT = 0,
+    @Limit INT = 20
+AS
+BEGIN
+    SELECT 
+        p.Person_ID, 
+        p.Full_Name AS Actor_Name, 
+        COUNT(DISTINCT m.Movie_ID) AS Total_Movies,
+        CAST(ISNULL(AVG(m.A_Rating), 0) AS DECIMAL(3,1)) AS Avg_Rating,
+        COUNT(a.Activity_ID) AS Total_Reviews
+    FROM Persons p
+    JOIN M_Cast mc ON p.Person_ID = mc.P_ID
+    JOIN Movies m ON mc.M_ID = m.Movie_ID
+    LEFT JOIN Activity a ON m.Movie_ID = a.Movie_ID AND a.Action_Type = 'REVIEW'
+    WHERE mc.Role_Type IN ('Actor', 'Acting')
+    GROUP BY p.Person_ID, p.Full_Name
+    ORDER BY Total_Movies DESC, Avg_Rating DESC
+    OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY;
+END;
+GO
+
+-- -------------------------------------------------------------
+-- ADMIN ANALYTICS: Movies by Release Year
+-- -------------------------------------------------------------
+CREATE PROCEDURE sp_Analytics_MoviesByYear
+    @Offset INT = 0,
+    @Limit INT = 20
+AS
+BEGIN
+    SELECT 
+        YEAR(m.Release_date) AS Release_Year, 
+        COUNT(DISTINCT m.Movie_ID) AS Total_Movies,
+        CAST(ISNULL(AVG(m.A_Rating), 0) AS DECIMAL(3,1)) AS Avg_Rating,
+        COUNT(a.Activity_ID) AS Total_Reviews
+    FROM Movies m
+    LEFT JOIN Activity a ON m.Movie_ID = a.Movie_ID AND a.Action_Type = 'REVIEW'
+    WHERE m.Release_date IS NOT NULL
+    GROUP BY YEAR(m.Release_date)
+    ORDER BY Release_Year DESC
+    OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY;
+END;
+GO
+
+-- -------------------------------------------------------------
+-- ADMIN ANALYTICS: Total Counts for Pagination
+-- -------------------------------------------------------------
+CREATE PROCEDURE sp_Analytics_MoviesByActor_Count
+AS
+BEGIN
+    SELECT COUNT(DISTINCT p.Person_ID) AS Total
+    FROM Persons p
+    JOIN M_Cast mc ON p.Person_ID = mc.P_ID
+    WHERE mc.Role_Type IN ('Actor', 'Acting');
+END;
+GO
+
+CREATE PROCEDURE sp_Analytics_MoviesByYear_Count
+AS
+BEGIN
+    SELECT COUNT(DISTINCT YEAR(m.Release_date)) AS Total
+    FROM Movies m
+    WHERE m.Release_date IS NOT NULL;
+END;
+GO
+
+
+-- Add Is_NSFW to Articles
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'Articles') AND name = 'Is_NSFW')
+BEGIN
+    ALTER TABLE Articles ADD Is_NSFW BIT NOT NULL DEFAULT 0;
+END;
+
+-- System Settings Table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'System_Settings')
+BEGIN
+    CREATE TABLE System_Settings (
+        Setting_Key VARCHAR(50) PRIMARY KEY,
+        Setting_Value VARCHAR(MAX)
+    );
+    INSERT INTO System_Settings (Setting_Key, Setting_Value) 
+    VALUES ('Maintenance_Mode', 'false'), ('Disable_Signups', 'false');
+END;
+
+-- Article Comments Table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Article_Comments')
+BEGIN
+    CREATE TABLE Article_Comments (
+        Comment_ID INT IDENTITY(1,1) PRIMARY KEY,
+        Article_ID INT NOT NULL,
+        User_ID INT NOT NULL,
+        Comment_Text TEXT NOT NULL,
+        Created_At DATETIME DEFAULT GETDATE(),
+        CONSTRAINT FK_Article_Comments_Article FOREIGN KEY (Article_ID) REFERENCES Articles(Article_ID) ON DELETE CASCADE,
+        CONSTRAINT FK_Article_Comments_User FOREIGN KEY (User_ID) REFERENCES Users(User_ID)
+    );
+END;
+

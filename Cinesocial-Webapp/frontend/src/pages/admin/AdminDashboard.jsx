@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { LogOut, LayoutDashboard, Users, Film, FileText, Star, Settings, Check, X, Search as SearchIcon, Eye, Trash2 } from 'lucide-react';
+import { LogOut, LayoutDashboard, Users, Film, FileText, Star, Settings, Check, X, Search as SearchIcon, Eye, Trash2, TrendingUp } from 'lucide-react';
 import Logo from '../../components/Logo';
 
 // Setup axios instance for admin
@@ -40,6 +40,7 @@ export default function AdminDashboard() {
     { id: 'MOVIES', icon: Film },
     { id: 'ARTICLES', icon: FileText, badge: stats?.pending_articles > 0 ? stats.pending_articles : null },
     { id: 'REVIEWS', icon: Star },
+    { id: 'ANALYTICS', icon: TrendingUp },
     { id: 'SETTINGS', icon: Settings },
   ];
 
@@ -58,11 +59,10 @@ export default function AdminDashboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center justify-between p-3 text-sm tracking-widest ${
-                  isActive 
-                    ? 'border-l-4 border-[#FFD300] bg-gray-800/50 text-[#FFD300] font-bold' 
+                className={`flex items-center justify-between p-3 text-sm tracking-widest ${isActive
+                    ? 'border-l-4 border-[#FFD300] bg-gray-800/50 text-[#FFD300] font-bold'
                     : 'border-l-4 border-transparent text-gray-400 hover:text-white hover:bg-gray-800/30'
-                } transition-colors`}
+                  } transition-colors`}
               >
                 <div className="flex items-center gap-3">
                   <Icon size={18} />
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
           })}
         </nav>
         <div className="px-4 mt-auto">
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center gap-3 p-3 text-red-500 hover:bg-red-500/10 w-full text-left text-sm tracking-widest transition-colors font-bold"
           >
@@ -95,11 +95,8 @@ export default function AdminDashboard() {
         {activeTab === 'MOVIES' && <MoviesPanel />}
         {activeTab === 'ARTICLES' && <ArticlesPanel />}
         {activeTab === 'REVIEWS' && <ReviewsPanel />}
-        {activeTab === 'SETTINGS' && (
-          <div className="p-8 border border-gray-800 bg-[#111] text-center">
-            <h2 className="text-xl text-gray-400 font-bold">Settings Coming Soon</h2>
-          </div>
-        )}
+        {activeTab === 'ANALYTICS' && <AnalyticsPanel />}
+        {activeTab === 'SETTINGS' && <SettingsPanel />}
       </main>
     </div>
   );
@@ -129,7 +126,7 @@ function DashboardPanel({ stats, setActiveTab }) {
             <span className="text-3xl">⚠</span>
             <span className="text-xl font-bold font-mono tracking-wider">{stats.pending_articles} ARTICLES AWAITING REVIEW</span>
           </div>
-          <button 
+          <button
             onClick={() => setActiveTab('ARTICLES')}
             className="bg-black text-white px-6 py-3 font-bold hover:bg-gray-800 transition-colors"
           >
@@ -193,11 +190,11 @@ function UsersPanel() {
       <div className="flex justify-between items-center border-b border-gray-800 pb-4">
         <h1 className="text-3xl font-serif font-bold text-white uppercase tracking-widest">Users</h1>
         <div className="relative w-64">
-          <input 
-            type="text" 
-            placeholder="Search users..." 
+          <input
+            type="text"
+            placeholder="Search users..."
             value={search}
-            onChange={(e) => {setSearch(e.target.value); setPage(1);}}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="w-full bg-[#111] border border-gray-700 p-2 pl-10 text-white focus:outline-none focus:border-[#FFD300]"
           />
           <SearchIcon size={16} className="absolute left-3 top-3 text-gray-500" />
@@ -233,7 +230,7 @@ function UsersPanel() {
                 </td>
                 <td className="p-3">{u.review_count}</td>
                 <td className="p-3 flex justify-end gap-2">
-                  <button 
+                  <button
                     onClick={() => handleBanToggle(u)}
                     className={`px-3 py-1 text-xs font-bold border ${u.is_banned ? 'border-green-500 text-green-500 hover:bg-green-500/10' : 'border-red-500 text-red-500 hover:bg-red-500/10'}`}
                   >
@@ -248,12 +245,12 @@ function UsersPanel() {
           </tbody>
         </table>
       </div>
-      
+
       {/* Pagination */}
       <div className="flex gap-2 justify-center mt-4">
-        <button disabled={page === 1} onClick={() => setPage(p => p-1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&lt;</button>
+        <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&lt;</button>
         <span className="px-4 py-2 text-gray-400">Page {page} of {totalPages || 1}</span>
-        <button disabled={page >= totalPages} onClick={() => setPage(p => p+1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&gt;</button>
+        <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&gt;</button>
       </div>
     </div>
   );
@@ -264,6 +261,7 @@ function MoviesPanel() {
   const [movies, setMovies] = useState([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [editingMovie, setEditingMovie] = useState(null);
 
   const fetchMovies = () => {
     adminApi.get(`/movies?page=${page}&search=${search}`)
@@ -275,26 +273,99 @@ function MoviesPanel() {
   }, [page, search]);
 
   const handleDelete = async (id) => {
-    if(!window.confirm("Are you sure you want to delete or hide this movie?")) return;
+    if (!window.confirm("Are you sure you want to delete or hide this movie?")) return;
     try {
       await adminApi.delete(`/movies/${id}`);
       fetchMovies();
-    } catch(err) {
+    } catch (err) {
       alert("Delete failed");
     }
   }
 
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await adminApi.put(`/movies/${editingMovie.Movie_ID}`, {
+        title: editingMovie.Title,
+        mType: editingMovie.M_Type,
+        releaseDate: editingMovie.Release_date,
+        runtime: editingMovie.Runtime,
+        synopsis: editingMovie.Synopsis,
+        mLanguage: editingMovie.M_Language,
+        posterUrl: editingMovie.Poster_URL,
+        trailerUrl: editingMovie.Trailer_URL
+      });
+      setEditingMovie(null);
+      fetchMovies();
+    } catch (err) {
+      alert("Update failed");
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 relative">
+      {editingMovie && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#111] border-2 border-gray-800 p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold font-serif text-[#FFD300]">EDIT MOVIE</h2>
+              <button onClick={() => setEditingMovie(null)} className="text-gray-400 hover:text-white"><X size={24} /></button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="flex flex-col gap-4 text-sm">
+              <div className="flex flex-col gap-1">
+                <label className="text-gray-400">Title</label>
+                <input required type="text" value={editingMovie.Title || ''} onChange={e => setEditingMovie({ ...editingMovie, Title: e.target.value })} className="bg-black border border-gray-700 p-2 text-white" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-gray-400">Type</label>
+                  <input type="text" value={editingMovie.M_Type || ''} onChange={e => setEditingMovie({ ...editingMovie, M_Type: e.target.value })} className="bg-black border border-gray-700 p-2 text-white" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-gray-400">Release Date</label>
+                  <input type="date" value={editingMovie.Release_date ? new Date(editingMovie.Release_date).toISOString().split('T')[0] : ''} onChange={e => setEditingMovie({ ...editingMovie, Release_date: e.target.value })} className="bg-black border border-gray-700 p-2 text-white" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-gray-400">Runtime (mins)</label>
+                  <input type="number" value={editingMovie.Runtime || ''} onChange={e => setEditingMovie({ ...editingMovie, Runtime: e.target.value })} className="bg-black border border-gray-700 p-2 text-white" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-gray-400">Language</label>
+                  <input type="text" value={editingMovie.M_Language || ''} onChange={e => setEditingMovie({ ...editingMovie, M_Language: e.target.value })} className="bg-black border border-gray-700 p-2 text-white" />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-gray-400">Synopsis</label>
+                <textarea rows={4} value={editingMovie.Synopsis || ''} onChange={e => setEditingMovie({ ...editingMovie, Synopsis: e.target.value })} className="bg-black border border-gray-700 p-2 text-white resize-none" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-gray-400">Poster URL</label>
+                <input type="text" value={editingMovie.Poster_URL || ''} onChange={e => setEditingMovie({ ...editingMovie, Poster_URL: e.target.value })} className="bg-black border border-gray-700 p-2 text-white" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-gray-400">Trailer URL</label>
+                <input type="text" value={editingMovie.Trailer_URL || ''} onChange={e => setEditingMovie({ ...editingMovie, Trailer_URL: e.target.value })} className="bg-black border border-gray-700 p-2 text-white" />
+              </div>
+              <div className="flex justify-end gap-3 mt-4">
+                <button type="button" onClick={() => setEditingMovie(null)} className="px-4 py-2 border border-gray-700 text-gray-400 hover:bg-gray-800">CANCEL</button>
+                <button type="submit" className="px-4 py-2 bg-[#FFD300] text-black font-bold border-2 border-black hover:bg-yellow-400">SAVE CHANGES</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center border-b border-gray-800 pb-4">
         <h1 className="text-3xl font-serif font-bold text-white uppercase tracking-widest">Movies</h1>
         <div className="flex gap-4">
           <div className="relative w-64">
-            <input 
-              type="text" 
-              placeholder="Search movies..." 
+            <input
+              type="text"
+              placeholder="Search movies..."
               value={search}
-              onChange={(e) => {setSearch(e.target.value); setPage(1);}}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="w-full bg-[#111] border border-gray-700 p-2 pl-10 text-white focus:outline-none focus:border-[#FFD300]"
             />
             <SearchIcon size={16} className="absolute left-3 top-3 text-gray-500" />
@@ -304,7 +375,7 @@ function MoviesPanel() {
           </button>
         </div>
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -323,10 +394,10 @@ function MoviesPanel() {
                   {m.Poster_URL ? <img src={m.Poster_URL} alt="" className="w-10 h-14 object-cover" /> : <div className="w-10 h-14 bg-gray-800"></div>}
                 </td>
                 <td className="p-3 font-bold text-base">{m.Title}</td>
-                <td className="p-3 text-gray-400">{new Date(m.Release_date).getFullYear()}</td>
+                <td className="p-3 text-gray-400">{m.Release_date ? new Date(m.Release_date).getFullYear() : 'N/A'}</td>
                 <td className="p-3 text-[#FFD300] font-bold">{parseFloat(m.A_Rating || 0).toFixed(1)}</td>
                 <td className="p-3 flex justify-end gap-2 items-center h-14">
-                  <button className="px-3 py-1 text-xs font-bold border border-gray-600 text-gray-400 hover:text-white">EDIT</button>
+                  <button onClick={() => setEditingMovie(m)} className="px-3 py-1 text-xs font-bold border border-gray-600 text-gray-400 hover:text-white">EDIT</button>
                   <button onClick={() => handleDelete(m.Movie_ID)} className="px-3 py-1 text-xs font-bold border border-red-500 text-red-500 hover:bg-red-500/10">DELETE</button>
                 </td>
               </tr>
@@ -335,9 +406,9 @@ function MoviesPanel() {
         </table>
       </div>
       <div className="flex gap-2 justify-center mt-4">
-        <button disabled={page === 1} onClick={() => setPage(p => p-1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&lt;</button>
+        <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&lt;</button>
         <span className="px-4 py-2 text-gray-400">Page {page}</span>
-        <button onClick={() => setPage(p => p+1)} className="px-4 py-2 border border-gray-700 hover:bg-gray-800">&gt;</button>
+        <button onClick={() => setPage(p => p + 1)} className="px-4 py-2 border border-gray-700 hover:bg-gray-800">&gt;</button>
       </div>
     </div>
   );
@@ -347,14 +418,25 @@ function MoviesPanel() {
 function ArticlesPanel() {
   const [tab, setTab] = useState('PENDING');
   const [articles, setArticles] = useState([]);
+  const [allArticles, setAllArticles] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchPending = () => {
     adminApi.get('/articles/pending').then(res => setArticles(res.data)).catch(console.error);
   };
+  
+  const fetchAll = () => {
+    adminApi.get(`/articles?page=${page}&limit=20`).then(res => {
+      setAllArticles(res.data.data);
+      setTotalPages(res.data.totalPages);
+    }).catch(console.error);
+  };
 
   useEffect(() => {
     if (tab === 'PENDING') fetchPending();
-  }, [tab]);
+    else fetchAll();
+  }, [tab, page]);
 
   const handleApprove = async (id) => {
     try {
@@ -402,13 +484,13 @@ function ArticlesPanel() {
                 <p className="text-gray-300 text-sm leading-relaxed mt-2">{a.Excerpt}...</p>
               </div>
               <div className="flex flex-col gap-3 justify-center min-w-[140px]">
-                <button 
+                <button
                   onClick={() => handleApprove(a.Article_ID)}
                   className="bg-[#FFD300] text-black font-bold py-3 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-transform"
                 >
                   <Check size={18} /> APPROVE
                 </button>
-                <button 
+                <button
                   onClick={() => handleReject(a.Article_ID)}
                   className="bg-red-600 text-white font-bold py-3 flex items-center justify-center gap-2 hover:bg-red-700 transition-colors"
                 >
@@ -419,7 +501,47 @@ function ArticlesPanel() {
           ))}
         </div>
       ) : (
-        <div className="text-gray-500 p-12 text-center border border-gray-800 border-dashed">All Articles view coming soon...</div>
+        <div className="flex flex-col gap-4">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b-2 border-gray-800 text-gray-400 text-sm tracking-wider">
+                  <th className="p-3 font-normal">TITLE</th>
+                  <th className="p-3 font-normal">AUTHOR</th>
+                  <th className="p-3 font-normal">CATEGORY</th>
+                  <th className="p-3 font-normal">STATUS</th>
+                  <th className="p-3 font-normal">VIEWS</th>
+                  <th className="p-3 font-normal">DATE</th>
+                  <th className="p-3 font-normal text-right">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allArticles.map(a => (
+                  <tr key={a.Article_ID} className="border-b border-gray-800 hover:bg-[#111] transition-colors text-sm">
+                    <td className="p-3 font-bold truncate max-w-[200px]" title={a.Title}>{a.Title}</td>
+                    <td className="p-3 text-gray-400">@{a.Username}</td>
+                    <td className="p-3 text-gray-400">{a.Category}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 text-xs font-bold border ${a.Status === 'approved' ? 'border-green-500 text-green-500' : a.Status === 'rejected' ? 'border-red-500 text-red-500' : 'border-gray-500 text-gray-500'}`}>
+                        {a.Status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="p-3 text-gray-400">{a.View_Count}</td>
+                    <td className="p-3 text-gray-400">{new Date(a.Created_At).toLocaleDateString()}</td>
+                    <td className="p-3 text-right">
+                      <a href={`/article/${a.Slug}`} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white">VIEW</a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex gap-2 justify-center mt-4">
+            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&lt;</button>
+            <span className="px-4 py-2 text-gray-400">Page {page} of {totalPages || 1}</span>
+            <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&gt;</button>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -428,7 +550,7 @@ function ArticlesPanel() {
 // ── Reviews Panel ───────────────────────────────────────────────────────────
 function ReviewsPanel() {
   const [reviews, setReviews] = useState([]);
-  
+
   const fetchReviews = () => {
     adminApi.get('/activity').then(res => {
       // Activity endpoint currently returns generic activity. 
@@ -441,11 +563,11 @@ function ReviewsPanel() {
   useEffect(() => { fetchReviews(); }, []);
 
   const handleDelete = async (id) => {
-    if(!window.confirm('Delete this review permanently?')) return;
+    if (!window.confirm('Delete this review permanently?')) return;
     try {
       await adminApi.delete(`/reviews/${id}`);
       fetchReviews();
-    } catch(err) {
+    } catch (err) {
       alert("Failed to delete review");
     }
   }
@@ -455,7 +577,7 @@ function ReviewsPanel() {
       <div className="border-b border-gray-800 pb-4">
         <h1 className="text-3xl font-serif font-bold text-white uppercase tracking-widest">Recent Reviews</h1>
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -482,6 +604,186 @@ function ReviewsPanel() {
             )}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Analytics Panel ─────────────────────────────────────────────────────────
+function AnalyticsPanel() {
+  const [tab, setTab] = useState('ACTORS');
+  const [data, setData] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchAnalytics = () => {
+    const endpoint = tab === 'ACTORS' ? '/analytics/actor' : '/analytics/year';
+    adminApi.get(`${endpoint}?page=${page}&limit=20`)
+      .then(res => {
+        setData(res.data.data);
+        setTotalPages(res.data.totalPages);
+      })
+      .catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [tab, page]);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex justify-between items-end border-b border-gray-800 pb-4">
+        <h1 className="text-3xl font-serif font-bold text-white uppercase tracking-widest">Analytics</h1>
+        <div className="flex gap-4">
+          <button onClick={() => { setTab('ACTORS'); setPage(1); }} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'ACTORS' ? 'border-[#FFD300] text-[#FFD300]' : 'border-transparent text-gray-500'}`}>BY ACTOR</button>
+          <button onClick={() => { setTab('YEARS'); setPage(1); }} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'YEARS' ? 'border-[#FFD300] text-[#FFD300]' : 'border-transparent text-gray-500'}`}>BY RELEASE YEAR</button>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b-2 border-gray-800 text-gray-400 text-sm tracking-wider">
+              <th className="p-3 font-normal">{tab === 'ACTORS' ? 'ACTOR NAME' : 'RELEASE YEAR'}</th>
+              <th className="p-3 font-normal">TOTAL MOVIES</th>
+              <th className="p-3 font-normal">AVERAGE RATING</th>
+              <th className="p-3 font-normal">TOTAL REVIEWS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, i) => (
+              <tr key={i} className="border-b border-gray-800 hover:bg-[#111] transition-colors text-sm">
+                <td className="p-3 font-bold">{tab === 'ACTORS' ? row.Actor_Name : row.Release_Year || 'Unknown'}</td>
+                <td className="p-3 text-gray-400">{row.Total_Movies}</td>
+                <td className="p-3 text-[#FFD300] font-bold">{parseFloat(row.Avg_Rating).toFixed(1)}</td>
+                <td className="p-3 text-gray-400">{row.Total_Reviews}</td>
+              </tr>
+            ))}
+            {data.length === 0 && (
+              <tr><td colSpan="4" className="p-8 text-center text-gray-500">No analytics data available</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex gap-2 justify-center mt-4">
+        <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&lt;</button>
+        <span className="px-4 py-2 text-gray-400">Page {page} of {totalPages || 1}</span>
+        <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-4 py-2 border border-gray-700 disabled:opacity-50 hover:bg-gray-800">&gt;</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Settings Panel ──────────────────────────────────────────────────────────
+function SettingsPanel() {
+  const [settings, setSettings] = useState({
+    Maintenance_Mode: 'false',
+    Disable_Signups: 'false'
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    adminApi.get('/settings').then(res => {
+      if (Object.keys(res.data).length > 0) {
+        setSettings(res.data);
+      }
+    }).catch(console.error);
+  }, []);
+
+  const handleToggle = (key) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: prev[key] === 'true' ? 'false' : 'true'
+    }));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await adminApi.put('/settings', settings);
+      alert('Settings saved successfully!');
+    } catch (err) {
+      alert('Failed to save settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRollback = () => {
+    const confirmation = prompt('DANGER: This action will permanently delete all content created in the last 24 hours. Type "ROLLBACK" to confirm.');
+    if (confirmation === 'ROLLBACK') {
+      // Mocked rollback functionality as requested
+      alert('Rollback executed. (Mocked)');
+    } else {
+      alert('Rollback cancelled.');
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-6 max-w-3xl">
+      <div className="border-b border-gray-800 pb-4 flex justify-between items-end">
+        <h1 className="text-3xl font-serif font-bold text-white uppercase tracking-widest">Settings</h1>
+        <button 
+          onClick={handleSave} 
+          disabled={saving}
+          className="bg-[#FFD300] text-black px-6 py-2 font-bold hover:bg-yellow-400 disabled:opacity-50 transition-colors"
+        >
+          {saving ? 'SAVING...' : 'SAVE CHANGES'}
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-8">
+        {/* General Settings */}
+        <div className="border-2 border-gray-800 bg-[#111] p-6">
+          <h2 className="text-xl font-bold font-serif mb-6 text-[#FFD300]">SITE CONFIGURATION</h2>
+          
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-lg">Maintenance Mode</h3>
+                <p className="text-sm text-gray-500">Temporarily block all public access and show a maintenance page.</p>
+              </div>
+              <button 
+                onClick={() => handleToggle('Maintenance_Mode')}
+                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${settings.Maintenance_Mode === 'true' ? 'bg-[#FFD300]' : 'bg-gray-600'}`}
+              >
+                <div className={`bg-black w-6 h-6 rounded-full shadow-md transform transition-transform ${settings.Maintenance_Mode === 'true' ? 'translate-x-6' : 'translate-x-0'}`}></div>
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-lg">Disable New Signups</h3>
+                <p className="text-sm text-gray-500">Prevent new users from creating accounts on CineSocial.</p>
+              </div>
+              <button 
+                onClick={() => handleToggle('Disable_Signups')}
+                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${settings.Disable_Signups === 'true' ? 'bg-[#FFD300]' : 'bg-gray-600'}`}
+              >
+                <div className={`bg-black w-6 h-6 rounded-full shadow-md transform transition-transform ${settings.Disable_Signups === 'true' ? 'translate-x-6' : 'translate-x-0'}`}></div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="border-2 border-red-900 bg-red-950/20 p-6">
+          <h2 className="text-xl font-bold font-serif mb-6 text-red-500">DANGER ZONE</h2>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-lg text-red-400">Emergency 24-Hour Rollback</h3>
+              <p className="text-sm text-red-300/60 max-w-md">Instantly revert all user signups, articles, and reviews created in the last 24 hours. Use only during severe bot attacks or malicious flooding.</p>
+            </div>
+            <button 
+              onClick={handleRollback}
+              className="bg-red-600 text-white px-6 py-3 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:bg-red-500 transition-all"
+            >
+              INITIATE ROLLBACK
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

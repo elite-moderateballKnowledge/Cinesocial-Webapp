@@ -14,8 +14,8 @@ exports.login = async (req, res) => {
     if (!admin) return res.status(401).json({ message: 'Invalid admin credentials' });
 
     const isMatch = await bcrypt.compare(password, admin.A_Password);
-    if (!isMatch) { 
-       return res.status(401).json({ message: 'Invalid admin credentials' });
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid admin credentials' });
     }
 
     const payload = { adminId: admin.Admin_ID, username: admin.A_Username, role: 'admin' };
@@ -45,7 +45,7 @@ exports.banUser = async (req, res) => {
 
 exports.addMovie = async (req, res) => {
   const { title, mType, releaseDate, runtime, synopsis, mLanguage, posterUrl, trailerUrl, genreIds, castIds } = req.body;
-  
+
   try {
     const pool = await poolPromise;
     const result = await pool.request()
@@ -61,7 +61,7 @@ exports.addMovie = async (req, res) => {
       .input('castIds', sql.VarChar, castIds ? castIds.join(',') : '')
       .output('newMovieId', sql.Int)
       .execute('sp_AddMovieWithDetails');
-      
+
     res.status(201).json({ message: 'Movie added successfully', movieId: result.output.newMovieId });
   } catch (err) {
     console.error(err);
@@ -157,7 +157,7 @@ exports.getUsers = async (req, res) => {
         ORDER BY u.Join_date DESC
         OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
       `);
-      
+
     res.json({ users: result.recordset, totalPages, total });
   } catch (err) {
     console.error(err);
@@ -174,7 +174,7 @@ exports.banUserById = async (req, res) => {
       .input('userId', sql.Int, id)
       .input('banStatus', sql.Bit, 1)
       .execute('sp_BanUser');
-      
+
     res.json({ message: 'User banned successfully' });
   } catch (err) {
     console.error(err);
@@ -191,7 +191,7 @@ exports.unbanUserById = async (req, res) => {
       .input('userId', sql.Int, id)
       .input('banStatus', sql.Bit, 0)
       .execute('sp_BanUser');
-      
+
     res.json({ message: 'User unbanned successfully' });
   } catch (err) {
     console.error(err);
@@ -226,7 +226,7 @@ exports.getMovies = async (req, res) => {
       .input('offset', sql.Int, offset)
       .input('limit', sql.Int, limit)
       .query(`
-        SELECT Movie_ID, Title, Release_date, A_Rating, Poster_URL
+        SELECT Movie_ID, Title, M_Type, Release_date, Runtime, Synopsis, M_Language, Poster_URL, Trailer_URL, A_Rating
         FROM Movies
         WHERE Title LIKE @search
         ORDER BY Release_date DESC
@@ -277,12 +277,16 @@ exports.deleteMovie = async (req, res) => {
   const { id } = req.params;
   try {
     const pool = await poolPromise;
-    
-    // Check FK dependencies in Activity
+
+    // Check FK dependencies in Activity and Parties
     const fkCheck = await pool.request()
       .input('id', sql.Int, id)
-      .query("SELECT COUNT(*) as count FROM Activity WHERE Movie_ID=@id");
-      
+      .query(`
+        SELECT 
+          (SELECT COUNT(*) FROM Activity WHERE Movie_ID=@id) +
+          (SELECT COUNT(*) FROM Parties WHERE Movie_ID=@id) as count
+      `);
+
     if (fkCheck.recordset[0].count > 0) {
       // Soft delete
       try {
@@ -294,18 +298,14 @@ exports.deleteMovie = async (req, res) => {
       await pool.request()
         .input('id', sql.Int, id)
         .query("UPDATE Movies SET is_hidden=1 WHERE Movie_ID=@id");
-      res.json({ message: 'Movie soft deleted (hidden) due to existing reviews' });
+      res.json({ message: 'Movie soft deleted (hidden) due to existing dependencies' });
     } else {
       // Hard delete
-      await pool.request()
-        .input('id', sql.Int, id)
-        .query("DELETE FROM M_Genres WHERE M_ID=@id");
-      await pool.request()
-        .input('id', sql.Int, id)
-        .query("DELETE FROM M_Cast WHERE M_ID=@id");
-      await pool.request()
-        .input('id', sql.Int, id)
-        .query("DELETE FROM Movies WHERE Movie_ID=@id");
+      await pool.request().input('id', sql.Int, id).query("DELETE FROM M_Genres WHERE M_ID=@id");
+      await pool.request().input('id', sql.Int, id).query("DELETE FROM M_Cast WHERE M_ID=@id");
+      await pool.request().input('id', sql.Int, id).query("DELETE FROM ListMovies WHERE M_ID=@id");
+      await pool.request().input('id', sql.Int, id).query("UPDATE Movies SET Sequel_of = NULL WHERE Sequel_of=@id");
+      await pool.request().input('id', sql.Int, id).query("DELETE FROM Movies WHERE Movie_ID=@id");
       res.json({ message: 'Movie hard deleted' });
     }
   } catch (err) {
@@ -347,3 +347,126 @@ exports.getExpiredSubscriptions = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Analytics: Movies by Actor
+exports.getAnalyticsByActor = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('Offset', sql.Int, offset)
+      .input('Limit', sql.Int, limit)
+      .execute('sp_Analytics_MoviesByActor');
+      
+    const countResult = await pool.request()
+      .execute('sp_Analytics_MoviesByActor_Count');
+      
+    const total = countResult.recordset[0].Total;
+    const totalPages = Math.ceil(total / limit);
+
+    res.json({ data: result.recordset, totalPages, page, total });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error retrieving actor analytics' });
+  }
+};
+
+// Analytics: Movies by Release Year
+exports.getAnalyticsByYear = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('Offset', sql.Int, offset)
+      .input('Limit', sql.Int, limit)
+      .execute('sp_Analytics_MoviesByYear');
+      
+    const countResult = await pool.request()
+      .execute('sp_Analytics_MoviesByYear_Count');
+      
+    const total = countResult.recordset[0].Total;
+    const totalPages = Math.ceil(total / limit);
+
+    res.json({ data: result.recordset, totalPages, page, total });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error retrieving year analytics' });
+  }
+};
+
+
+// -- Articles -------------------------------------------------------------
+exports.getAllArticles = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('offset', sql.Int, offset)
+      .input('limit', sql.Int, limit)
+      .query(`
+        SELECT a.Article_ID, a.Title, a.Category, a.Status, a.Created_At, a.View_Count, u.Username
+        FROM Articles a
+        JOIN Users u ON a.Author_ID = u.User_ID
+        ORDER BY a.Created_At DESC
+        OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+      `);
+      
+    const countRes = await pool.request().query('SELECT COUNT(*) as Total FROM Articles');
+    const total = countRes.recordset[0].Total;
+    const totalPages = Math.ceil(total / limit);
+
+    res.json({ data: result.recordset, totalPages, page, total });
+  } catch (err) {
+    console.error('getAllArticles:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// -- Settings -------------------------------------------------------------
+exports.getSettings = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query('SELECT Setting_Key, Setting_Value FROM System_Settings');
+    const settings = {};
+    result.recordset.forEach(row => {
+      settings[row.Setting_Key] = row.Setting_Value;
+    });
+    res.json(settings);
+  } catch (err) {
+    console.error('getSettings:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateSettings = async (req, res) => {
+  const settingsToUpdate = req.body;
+  try {
+    const pool = await poolPromise;
+    
+    // We update multiple settings in a simple loop for now
+    for (const [key, value] of Object.entries(settingsToUpdate)) {
+      await pool.request()
+        .input('key', sql.VarChar(50), key)
+        .input('val', sql.VarChar(sql.MAX), String(value))
+        .query(`
+          UPDATE System_Settings SET Setting_Value = @val WHERE Setting_Key = @key;
+          IF @@ROWCOUNT = 0
+            INSERT INTO System_Settings (Setting_Key, Setting_Value) VALUES (@key, @val);
+        `);
+    }
+    res.json({ message: 'Settings updated' });
+  } catch (err) {
+    console.error('updateSettings:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+

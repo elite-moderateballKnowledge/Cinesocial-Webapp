@@ -17,12 +17,18 @@ router.get('/my-articles', verifyToken, articleController.getMyArticles);
 // GET /api/articles/:slug
 router.get('/:slug', articleController.getArticleBySlug);
 
+// GET /api/articles/:slug/comments
+router.get('/:slug/comments', articleController.getComments);
+
 // ─────────────────────────────────────────────────────────────
 // AUTHENTICATED (Cinephile-gated inside the controller)
 // ─────────────────────────────────────────────────────────────
 
 // POST /api/articles
 router.post('/', verifyToken, articleController.createArticle);
+
+// POST /api/articles/:slug/comments (Basic and Premium users)
+router.post('/:slug/comments', verifyToken, articleController.addComment);
 
 // PUT /api/articles/:id
 router.put('/:id', verifyToken, articleController.updateArticle);

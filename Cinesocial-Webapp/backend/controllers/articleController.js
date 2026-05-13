@@ -130,7 +130,7 @@ exports.getArticleBySlug = async (req, res) => {
         SELECT TOP 3
           Article_ID, Title, Slug, Cover_Image_URL, Category,
           Published_At, Username, flair_label, View_Count,
-          LEFT(Body, 120) AS Excerpt
+          LEFT(CAST(Body AS VARCHAR(MAX)), 120) AS Excerpt
         FROM vw_PublishedArticles
         WHERE Article_ID <> @articleId
           AND (Category = @category OR (Movie_ID = @movieId AND @movieId <> 0))
@@ -151,7 +151,7 @@ exports.getArticleBySlug = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 exports.createArticle = async (req, res) => {
   const userId = req.user.userId;
-  const { title, body, cover_image_url, movie_id, category } = req.body;
+  const { title, body, cover_image_url, movie_id, category, is_nsfw } = req.body;
 
   // Validate required fields
   if (!title || !body || !category) {
@@ -197,12 +197,13 @@ exports.createArticle = async (req, res) => {
       .input('coverImageUrl', sql.VarChar(255),  cover_image_url || null)
       .input('movieId',       sql.Int,           movie_id || null)
       .input('category',      sql.VarChar(50),   category.toUpperCase())
+      .input('isNsfw',        sql.Bit,           is_nsfw ? 1 : 0)
       .query(`
         INSERT INTO Articles
-          (Author_ID, Title, Slug, Body, Cover_Image_URL, Movie_ID, Category, Status)
+          (Author_ID, Title, Slug, Body, Cover_Image_URL, Movie_ID, Category, Status, Is_NSFW)
         OUTPUT INSERTED.Article_ID, INSERTED.Slug, INSERTED.Status, INSERTED.Created_At
         VALUES
-          (@authorId, @title, @slug, @body, @coverImageUrl, @movieId, @category, 'pending')
+          (@authorId, @title, @slug, @body, @coverImageUrl, @movieId, @category, 'pending', @isNsfw)
       `);
 
     const newArticle = insertResult.recordset[0];
@@ -232,7 +233,7 @@ exports.getMyArticles = async (req, res) => {
           a.Article_ID, a.Title, a.Slug, a.Category, a.Status,
           a.Rejection_Note, a.Cover_Image_URL, a.Movie_ID,
           a.Created_At, a.Published_At, a.Updated_At, a.View_Count,
-          LEFT(a.Body, 200) AS Excerpt
+          LEFT(CAST(a.Body AS VARCHAR(MAX)), 200) AS Excerpt
         FROM Articles a
         WHERE a.Author_ID = @userId
         ORDER BY a.Created_At DESC
@@ -370,7 +371,7 @@ exports.getPendingArticles = async (req, res) => {
         a.Article_ID, a.Title, a.Slug, a.Category, a.Status,
         a.Cover_Image_URL, a.Movie_ID, a.Created_At, a.Updated_At,
         u.Username, u.flair_label,
-        LEFT(a.Body, 300) AS Excerpt
+        LEFT(CAST(a.Body AS VARCHAR(MAX)), 300) AS Excerpt
       FROM Articles a
       JOIN Users u ON a.Author_ID = u.User_ID
       WHERE a.Status = 'pending'
@@ -459,6 +460,81 @@ exports.rejectArticle = async (req, res) => {
     res.json({ message: 'Article rejected. Author will see the note.' });
   } catch (err) {
     console.error('rejectArticle:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// COMMENTS — GET /api/articles/:slug/comments
+// ─────────────────────────────────────────────────────────────
+exports.getComments = async (req, res) => {
+  const { slug } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('slug', sql.VarChar, slug)
+      .query(`
+        SELECT c.Comment_ID, c.Comment_Text, c.Created_At, u.Username, u.flair_label, u.Profile_Pic_URL
+        FROM Article_Comments c
+        JOIN Articles a ON c.Article_ID = a.Article_ID
+        JOIN Users u ON c.User_ID = u.User_ID
+        WHERE a.Slug = @slug
+        ORDER BY c.Created_At DESC
+      `);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('getComments:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// COMMENTS — POST /api/articles/:slug/comments
+// ─────────────────────────────────────────────────────────────
+exports.addComment = async (req, res) => {
+  const { slug } = req.params;
+  const { text } = req.body;
+  const userId = req.user.userId;
+  
+  if (!text || !text.trim()) {
+    return res.status(400).json({ message: 'Comment text is required.' });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const articleRes = await pool.request()
+      .input('slug', sql.VarChar, slug)
+      .query(`SELECT Article_ID FROM Articles WHERE Slug = @slug`);
+      
+    if (articleRes.recordset.length === 0) {
+      return res.status(404).json({ message: 'Article not found.' });
+    }
+    
+    const articleId = articleRes.recordset[0].Article_ID;
+    
+    const insertRes = await pool.request()
+      .input('articleId', sql.Int, articleId)
+      .input('userId', sql.Int, userId)
+      .input('text', sql.VarChar(sql.MAX), text.trim())
+      .query(`
+        INSERT INTO Article_Comments (Article_ID, User_ID, Comment_Text)
+        OUTPUT INSERTED.Comment_ID, INSERTED.Comment_Text, INSERTED.Created_At
+        VALUES (@articleId, @userId, @text)
+      `);
+      
+    // Fetch the user's details to return the full comment object
+    const userRes = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`SELECT Username, flair_label, Profile_Pic_URL FROM Users WHERE User_ID = @userId`);
+      
+    const newComment = {
+      ...insertRes.recordset[0],
+      ...userRes.recordset[0]
+    };
+
+    res.status(201).json({ message: 'Comment added', comment: newComment });
+  } catch (err) {
+    console.error('addComment:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
