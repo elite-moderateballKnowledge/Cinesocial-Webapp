@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
@@ -7,7 +7,6 @@ const CATEGORIES = ['REVIEW', 'ESSAY', 'EDITORIAL', 'ANALYSIS', 'HOT TAKE'];
 
 export default function WriteArticle() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [isCinephile, setIsCinephile] = useState(null); // null = checking
   const [form, setForm] = useState({
     title: '', body: '', cover_image_url: '', movie_id: '', category: 'ESSAY', is_nsfw: false,

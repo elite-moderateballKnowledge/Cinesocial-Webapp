@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { LogOut, LayoutDashboard, Users, Film, FileText, Star, Settings, Check, X, Search as SearchIcon, Eye, Trash2, TrendingUp } from 'lucide-react';
+import { LogOut, LayoutDashboard, Users, Film, FileText, Star, Settings, Check, X, Search as SearchIcon, Eye, TrendingUp } from 'lucide-react';
 import Logo from '../../components/Logo';
 
 // Setup axios instance for admin
@@ -19,10 +19,6 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('DASHBOARD');
   const [stats, setStats] = useState(null);
 
-  if (!localStorage.getItem('adminToken')) {
-    return <Navigate to="/admin/login" />;
-  }
-
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     navigate('/admin/login');
@@ -33,6 +29,10 @@ export default function AdminDashboard() {
       adminApi.get('/stats').then(res => setStats(res.data)).catch(console.error);
     }
   }, [activeTab]);
+
+  if (!localStorage.getItem('adminToken')) {
+    return <Navigate to="/admin/login" />;
+  }
 
   const tabs = [
     { id: 'DASHBOARD', icon: LayoutDashboard },
@@ -180,7 +180,7 @@ function UsersPanel() {
         await adminApi.post(`/users/${user.user_id}/ban`, { reason });
       }
       fetchUsers();
-    } catch (err) {
+    } catch {
       alert("Action failed");
     }
   };
@@ -277,7 +277,7 @@ function MoviesPanel() {
     try {
       await adminApi.delete(`/movies/${id}`);
       fetchMovies();
-    } catch (err) {
+    } catch {
       alert("Delete failed");
     }
   }
@@ -297,7 +297,7 @@ function MoviesPanel() {
       });
       setEditingMovie(null);
       fetchMovies();
-    } catch (err) {
+    } catch {
       alert("Update failed");
     }
   };
@@ -442,7 +442,7 @@ function ArticlesPanel() {
     try {
       await adminApi.post(`/articles/${id}/approve`);
       fetchPending();
-    } catch (err) {
+    } catch {
       alert('Failed to approve');
     }
   };
@@ -453,7 +453,7 @@ function ArticlesPanel() {
     try {
       await adminApi.post(`/articles/${id}/reject`, { rejection_note: note });
       fetchPending();
-    } catch (err) {
+    } catch {
       alert('Failed to reject');
     }
   };
@@ -567,7 +567,7 @@ function ReviewsPanel() {
     try {
       await adminApi.delete(`/reviews/${id}`);
       fetchReviews();
-    } catch (err) {
+    } catch {
       alert("Failed to delete review");
     }
   }
@@ -703,7 +703,7 @@ function SettingsPanel() {
     try {
       await adminApi.put('/settings', settings);
       alert('Settings saved successfully!');
-    } catch (err) {
+    } catch {
       alert('Failed to save settings.');
     } finally {
       setSaving(false);

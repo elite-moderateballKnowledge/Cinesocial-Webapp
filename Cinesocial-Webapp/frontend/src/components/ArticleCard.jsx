@@ -22,7 +22,7 @@ export default function ArticleCard({ article, colorIndex = 0 }) {
   const {
     Slug, Title, Category, Cover_Image_URL,
     Published_At, Username, flair_label,
-    Body, View_Count,
+    Body,
   } = article;
 
   const catColor  = CATEGORY_COLORS[Category] ?? '#FFD300';
