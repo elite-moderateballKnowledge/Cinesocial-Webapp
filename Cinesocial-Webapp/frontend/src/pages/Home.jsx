@@ -2,229 +2,235 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { apiRequest } from '../lib/api';
-import ArticleCard from '../components/ArticleCard';
 import MovieCard from '../components/MovieCard';
 
-// ── Animation variants ────────────────────────────────────────
 const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: 22 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
 };
-const stagger = { show: { transition: { staggerChildren: 0.09 } } };
 
-// ── Section header ────────────────────────────────────────────
-function SectionHeader({ label, linkTo, linkLabel }) {
+const stagger = { show: { transition: { staggerChildren: 0.06 } } };
+
+const sectionShadow = '8px 8px 0 0 #000';
+
+const toMovieCardShape = (movie) => ({
+  Movie_ID: movie?.movie_id,
+  Title: movie?.title,
+  Release_date: movie?.release_date,
+  Poster_URL: movie?.poster_url,
+  A_Rating: movie?.avg_rating,
+  M_Type: movie?.genres?.[0] ?? 'FILM',
+});
+
+const formatDate = (date) => {
+  if (!date) return 'UNPUBLISHED';
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  }).toUpperCase();
+};
+
+function LoadingSkeleton() {
   return (
-    <div className="flex items-end justify-between border-b-4 border-ink pb-3 mb-8">
-      <h2 className="text-3xl md:text-4xl font-black" style={{ fontFamily: 'var(--font-serif)' }}>
-        {label}
-      </h2>
+    <div className="flex flex-col gap-12">
+      <div className="h-96 border-4 border-ink bg-primary animate-pulse" />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-96 border-4 border-ink bg-surface animate-pulse" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ kicker, title, linkTo, linkLabel }) {
+  return (
+    <div className="mb-6 flex flex-col gap-3 border-b-4 border-ink pb-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        {kicker && (
+          <p className="mb-2 text-xs font-black uppercase opacity-65">
+            {kicker}
+          </p>
+        )}
+        <h2 className="text-3xl font-black uppercase leading-none md:text-5xl">
+          {title}
+        </h2>
+      </div>
       {linkTo && (
-        <Link to={linkTo}
-          className="text-sm font-black border-b-2 border-ink hover:bg-primary px-2 pb-0.5 transition-colors"
-          style={{ fontFamily: 'var(--font-display)' }}>
-          {linkLabel} →
+        <Link
+          to={linkTo}
+          className="self-start border-4 border-ink bg-surface-container-lowest px-4 py-2 text-sm font-black uppercase transition-all hover:bg-primary md:self-auto"
+          style={{ boxShadow: '4px 4px 0 0 #000' }}
+        >
+          {linkLabel}
         </Link>
       )}
     </div>
   );
 }
 
-// ── Skeleton block ────────────────────────────────────────────
-function Skel({ h = 'h-48', extra = '' }) {
-  return <div className={`${h} ${extra} border-4 border-ink bg-surface-container animate-pulse`} />;
-}
-
-// ── Loading skeleton ──────────────────────────────────────────
-function LoadingSkeleton() {
+function HomeHero() {
   return (
-    <div className="flex flex-col gap-16">
-      <Skel h="h-56" extra="w-full" />
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {Array.from({ length: 10 }).map((_, i) => <Skel key={i} h="h-64" />)}
+    <section
+      className="overflow-hidden border-4 border-ink bg-primary px-4 py-14 text-center md:px-8 md:py-20"
+      style={{ boxShadow: sectionShadow }}
+    >
+      <div className="mx-auto flex max-w-5xl flex-col items-center">
+        <h1 className="w-full font-serif font-black uppercase leading-none">
+          <span className="block text-6xl leading-[0.78] sm:text-7xl md:text-8xl lg:text-9xl">
+            Film.
+          </span>
+          <span
+            className="block text-5xl leading-[0.82] sm:text-6xl md:text-8xl lg:text-9xl"
+            style={{
+              color: 'transparent',
+              WebkitTextStroke: '2px #000',
+              paintOrder: 'stroke fill',
+            }}
+          >
+            Culture.
+          </span>
+          <span className="block text-5xl leading-[0.78] sm:text-7xl md:text-8xl lg:text-9xl">
+            Obsession.
+          </span>
+        </h1>
+
+        <div className="mt-10 flex w-full max-w-xl flex-col gap-4 sm:flex-row sm:justify-center">
+          <Link
+            to="/movies"
+            className="border-4 border-ink bg-ink px-8 py-4 text-sm font-black uppercase text-primary transition-all hover:-translate-x-1 hover:-translate-y-1"
+            style={{ boxShadow: '8px 8px 0 0 #000' }}
+          >
+            Explore Now
+          </Link>
+          <Link
+            to="/search"
+            className="border-4 border-ink bg-primary px-8 py-4 text-sm font-black uppercase transition-all hover:-translate-x-1 hover:-translate-y-1"
+            style={{ boxShadow: '8px 8px 0 0 #000' }}
+          >
+            Our Picks
+          </Link>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-// ── Grid cell: Editorial pick ─────────────────────────────────
-function EditorialCell({ article }) {
-  if (!article) return <div className="border-4 border-ink bg-surface-container h-full min-h-64" />;
-  return (
-    <Link to={`/articles/${article.slug}`} className="block group h-full">
-      <div className="border-4 border-ink h-full min-h-64 p-6 flex flex-col justify-between transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1"
-        style={{ backgroundColor: '#7f1d1d', boxShadow: '8px 8px 0 0 #000', color: '#fff' }}>
-        <div>
-          <span className="inline-block px-2 py-0.5 border-2 border-white text-xs font-black tracking-widest mb-4"
-            style={{ backgroundColor: '#FF3D00', fontFamily: 'var(--font-display)' }}>
-            {article.category}
-          </span>
-          <h3 className="text-2xl font-black leading-tight mb-3"
-            style={{ fontFamily: 'var(--font-serif)' }}>
-            {article.title}
-          </h3>
-          <p className="text-sm opacity-70 line-clamp-3" style={{ fontFamily: 'var(--font-mono)' }}>
-            {article.excerpt}
-          </p>
-        </div>
-        <div className="mt-4">
-          <span className="text-xs font-black opacity-70 block mb-3" style={{ fontFamily: 'var(--font-mono)' }}>
-            {article.author_username}
-          </span>
-          <span className="inline-block border-2 border-white px-4 py-1.5 text-xs font-black group-hover:bg-white group-hover:text-ink transition-colors"
-            style={{ fontFamily: 'var(--font-display)' }}>
-            READ ESSAY →
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
+function FeaturedEditorial({ article }) {
+  if (!article) return null;
 
-// ── Grid cell: Featured spotlight ─────────────────────────────
-function FeaturedCell({ movie }) {
-  if (!movie) return <div className="border-4 border-ink bg-surface-container h-full min-h-96" />;
   return (
-    <Link to={`/movie/${movie.movie_id}`} className="block group relative h-full min-h-96 overflow-hidden border-4 border-ink">
-      {movie.poster_url
-        ? <img src={movie.poster_url} alt={movie.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        : <div className="absolute inset-0 bg-surface-container" />}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.35) 55%,transparent 100%)' }} />
-      <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-        <div className="inline-block px-2 py-0.5 border-2 border-ink text-xs font-black mb-3"
-          style={{ backgroundColor: '#FFD300', fontFamily: 'var(--font-display)' }}>
-          FEATURED
-        </div>
-        <h3 className="text-2xl md:text-3xl font-black text-white leading-tight mb-2"
-          style={{ fontFamily: 'var(--font-serif)', textShadow: '2px 2px 0 #000' }}>
-          {movie.title}
-        </h3>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="px-2 py-0.5 border-2 border-ink text-sm font-black"
-            style={{ backgroundColor: '#FFD300', fontFamily: 'var(--font-display)' }}>
-            ★ {Number(movie.avg_rating).toFixed(1)}
-          </span>
-        </div>
-        <span className="inline-block border-2 border-white text-white px-4 py-1.5 text-xs font-black group-hover:bg-white group-hover:text-ink transition-colors"
-          style={{ fontFamily: 'var(--font-display)' }}>
-          READ REVIEWS →
-        </span>
-      </div>
-    </Link>
-  );
-}
-
-// ── Grid cell: article (yellow) ───────────────────────────────
-function ArticleGridCell({ article, bg = '#FFD300' }) {
-  if (!article) return <div className="border-4 border-ink bg-surface-container h-full min-h-48" />;
-  return (
-    <Link to={`/articles/${article.slug}`} className="block group h-full">
-      <div className="border-4 border-ink h-full min-h-48 p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1"
-        style={{ backgroundColor: bg, boxShadow: '6px 6px 0 0 #000' }}>
-        <div>
-          <span className="inline-block px-2 py-0.5 border-2 border-ink text-xs font-black tracking-widest mb-3"
-            style={{ backgroundColor: '#000', color: '#FFD300', fontFamily: 'var(--font-display)' }}>
-            {article.category}
-          </span>
-          <h4 className="text-lg font-black leading-snug line-clamp-3"
-            style={{ fontFamily: 'var(--font-serif)' }}>
-            {article.title}
-          </h4>
-        </div>
-        <span className="text-xs font-black opacity-70 mt-3" style={{ fontFamily: 'var(--font-mono)' }}>
-          {article.author_username}
-        </span>
-      </div>
-    </Link>
-  );
-}
-
-// ── Grid cell: list preview ───────────────────────────────────
-function ListGridCell({ list }) {
-  if (!list) return <div className="border-4 border-ink bg-surface-container h-full min-h-48" />;
-  const posters = list.preview_posters ?? [];
-  return (
-    <Link to="/lists" className="block group h-full">
-      <div className="border-4 border-ink h-full min-h-48 p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1 bg-surface"
-        style={{ boxShadow: '6px 6px 0 0 #FFD300' }}>
-        <div>
-          <span className="inline-block px-2 py-0.5 border-2 border-ink text-xs font-black tracking-widest mb-3"
-            style={{ backgroundColor: '#FFD300', fontFamily: 'var(--font-display)' }}>
-            NEW LIST
-          </span>
-          <h4 className="text-base font-black leading-snug line-clamp-2 mb-1"
-            style={{ fontFamily: 'var(--font-serif)' }}>
-            {list.list_title}
-          </h4>
-          <p className="text-xs opacity-60 font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
-            by {list.owner_username} · {list.movie_count} films
-          </p>
-        </div>
-        {/* 2×2 poster grid */}
-        <div className="grid grid-cols-2 gap-1 mt-3">
-          {[0,1,2,3].map(i => (
-            <div key={i} className="aspect-[2/3] border-2 border-ink overflow-hidden bg-surface-container">
-              {posters[i]
-                ? <img src={posters[i]} alt="" className="w-full h-full object-cover" />
-                : <div className="w-full h-full" style={{ backgroundColor: ['#FFD300','#FF3D00','#6C3CE1','#00A3E0'][i] }} />}
+    <Link to={`/articles/${article.slug}`} className="group block h-full">
+      <article
+        className="grid h-full overflow-hidden border-4 border-ink bg-surface-container-lowest transition-all duration-200 md:grid-cols-[0.9fr_1.1fr] group-hover:-translate-x-1 group-hover:-translate-y-1"
+        style={{ boxShadow: sectionShadow }}
+      >
+        <div className="min-h-64 border-b-4 border-ink bg-accent-purple md:border-b-0 md:border-r-4">
+          {article.cover_image_url ? (
+            <img src={article.cover_image_url} alt={article.title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full min-h-64 items-center justify-center p-8 text-center text-3xl font-black uppercase">
+              {article.category || 'Editorial'}
             </div>
-          ))}
+          )}
         </div>
-      </div>
+        <div className="flex flex-col justify-between gap-6 p-6 md:p-8">
+          <div>
+            <p className="mb-3 text-xs font-black uppercase opacity-65">Editor's note</p>
+            <h3 className="text-3xl font-black uppercase leading-none md:text-5xl">{article.title}</h3>
+            {article.excerpt && (
+              <p className="mt-4 max-w-2xl text-sm font-bold leading-relaxed opacity-75 md:text-base">
+                {article.excerpt}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t-4 border-ink pt-4 text-xs font-black uppercase">
+            <span>{article.author_username || 'CineSocial'}</span>
+            <span>{formatDate(article.published_at)}</span>
+          </div>
+        </div>
+      </article>
     </Link>
   );
 }
 
-// ── Compact movie cell (grid use) ─────────────────────────────
-function MovieGridCell({ movie, index = 0 }) {
-  if (!movie) return <div className="border-4 border-ink bg-surface-container h-full min-h-48" />;
-  return <MovieCard movie={{
-    Movie_ID: movie.movie_id, Title: movie.title,
-    Release_date: movie.release_date, Poster_URL: movie.poster_url,
-    A_Rating: movie.avg_rating, M_Type: movie.genres?.[0] ?? 'FILM',
-  }} colorIndex={index} />;
+function MovieStrip({ movies }) {
+  if (!movies?.length) return null;
+
+  return (
+    <motion.div variants={stagger} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {movies.slice(0, 4).map((movie, index) => (
+        <motion.div key={movie.movie_id ?? index} variants={fadeUp}>
+          <MovieCard movie={toMovieCardShape(movie)} colorIndex={index} />
+        </motion.div>
+      ))}
+    </motion.div>
+  );
 }
 
-// ── Section C: Community list card ───────────────────────────
-function CommunityListCard({ list }) {
+function EssayCard({ article, index }) {
+  if (!article) return null;
+  const colors = ['#6C3CE1', '#FF3D00', '#00A3E0', '#00C853'];
+  const color = colors[index % colors.length];
+
+  return (
+    <motion.article variants={fadeUp}>
+      <Link
+        to={`/articles/${article.slug}`}
+        className="group flex h-full flex-col border-4 border-ink bg-surface-container-lowest transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1"
+        style={{ boxShadow: `8px 8px 0 0 ${color}` }}
+      >
+        <div className="flex min-h-44 items-center justify-center border-b-4 border-ink p-5 text-center" style={{ backgroundColor: color }}>
+          <span className="border-2 border-ink bg-primary px-3 py-1 text-xs font-black uppercase">
+            {article.category || 'Essay'}
+          </span>
+        </div>
+        <div className="flex flex-1 flex-col gap-4 p-5">
+          <h3 className="text-2xl font-black uppercase leading-tight">{article.title}</h3>
+          {article.excerpt && (
+            <p className="line-clamp-3 text-sm font-bold opacity-70">{article.excerpt}</p>
+          )}
+          <div className="mt-auto flex items-center justify-between gap-4 border-t-4 border-ink pt-3 text-xs font-black uppercase">
+            <span>{article.author_username || 'CineSocial'}</span>
+            <span>Read</span>
+          </div>
+        </div>
+      </Link>
+    </motion.article>
+  );
+}
+
+function ListPreview({ list, index }) {
+  if (!list) return null;
   const posters = list.preview_posters ?? [];
+
   return (
     <motion.div variants={fadeUp}>
-      <Link to="/lists" className="block group">
-        <div className="border-4 border-ink bg-surface flex flex-col h-full transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1"
-          style={{ boxShadow: '8px 8px 0 0 #000' }}>
-          {/* 2×2 poster strip */}
-          <div className="grid grid-cols-2 border-b-4 border-ink">
-            {[0,1,2,3].map(i => (
-              <div key={i} className={`aspect-[3/2] overflow-hidden bg-surface-container ${i < 2 ? '' : 'border-t-2 border-ink'} ${i % 2 === 0 ? '' : 'border-l-2 border-ink'}`}>
-                {posters[i]
-                  ? <img src={posters[i]} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  : <div className="w-full h-full" style={{ backgroundColor: ['#FFD300','#FF3D00','#6C3CE1','#00A3E0'][i % 4] }} />}
-              </div>
-            ))}
-          </div>
-          <div className="p-4 flex flex-col flex-1 gap-2">
-            <h3 className="font-black text-lg leading-snug line-clamp-2" style={{ fontFamily: 'var(--font-serif)' }}>
-              {list.list_title}
-            </h3>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold opacity-70" style={{ fontFamily: 'var(--font-mono)' }}>
-                {list.owner_username}
-              </span>
-              {list.owner_flair && (
-                <span className="px-1.5 py-0.5 border-2 border-ink text-[10px] font-black"
-                  style={{ backgroundColor: '#FFD300' }}>{list.owner_flair}</span>
-              )}
-            </div>
-            <div className="flex items-center justify-between border-t-4 border-ink pt-3 mt-auto">
-              <span className="text-xs font-black opacity-60" style={{ fontFamily: 'var(--font-mono)' }}>
-                {list.movie_count} FILMS
-              </span>
-              <span className="text-xs font-black border-2 border-ink px-2 py-0.5 bg-ink text-surface group-hover:bg-primary group-hover:text-ink transition-colors"
-                style={{ fontFamily: 'var(--font-display)' }}>
-                VIEW LIST →
-              </span>
-            </div>
+      <Link
+        to={`/lists/${list.list_id}`}
+        className="group flex h-full flex-col border-4 border-ink bg-surface transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1"
+        style={{ boxShadow: `8px 8px 0 0 ${index % 2 ? '#00A3E0' : '#000'}` }}
+      >
+        <div className="grid h-44 grid-cols-4 overflow-hidden border-b-4 border-ink bg-primary">
+          {Array.from({ length: 4 }).map((_, posterIndex) => (
+            posters[posterIndex] ? (
+              <img
+                key={posterIndex}
+                src={posters[posterIndex]}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div key={posterIndex} className="border-r-2 border-ink last:border-r-0" />
+            )
+          ))}
+        </div>
+        <div className="flex flex-1 flex-col gap-4 p-5">
+          <h3 className="text-2xl font-black uppercase leading-tight">{list.list_title}</h3>
+          <div className="mt-auto flex items-center justify-between border-t-4 border-ink pt-3 text-xs font-black uppercase">
+            <span>{list.owner_username}</span>
+            <span>{list.movie_count ?? 0} movies</span>
           </div>
         </div>
       </Link>
@@ -232,193 +238,103 @@ function CommunityListCard({ list }) {
   );
 }
 
-// ── Section D: Canon card ─────────────────────────────────────
-function CanonCard({ movie, rank }) {
-  const rankStr = String(rank).padStart(2, '0');
-  return (
-    <Link to={`/movie/${movie.movie_id}`} className="block group flex-shrink-0 w-48">
-      <div className="border-4 border-ink bg-surface transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1"
-        style={{ boxShadow: '6px 6px 0 0 #000' }}>
-        <div className="relative h-64 border-b-4 border-ink overflow-hidden bg-surface-container">
-          {movie.poster_url
-            ? <img src={movie.poster_url} alt={movie.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-            : <div className="w-full h-full bg-surface-container" />}
-          <div className="absolute top-0 left-0 p-2 leading-none font-black"
-            style={{ fontSize: '3rem', fontFamily: 'var(--font-serif)', color: '#FFD300', textShadow: '3px 3px 0 #000', lineHeight: 1 }}>
-            {rankStr}
-          </div>
-        </div>
-        <div className="p-3">
-          <h4 className="font-black text-sm leading-snug line-clamp-2 mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
-            {movie.title}
-          </h4>
-          <span className="inline-block px-2 py-0.5 border-2 border-ink text-xs font-black"
-            style={{ backgroundColor: '#FFD300', fontFamily: 'var(--font-display)' }}>
-            ★ {Number(movie.avg_rating || 0).toFixed(1)}
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// ── Main component ────────────────────────────────────────────
 export default function Home() {
-  const [data, setData]       = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     let ignore = false;
+
     apiRequest('/home')
-      .then(d => { if (!ignore) { setData(d); setLoading(false); } })
-      .catch(e => { if (!ignore) { setError(e.message); setLoading(false); } });
-    return () => { ignore = true; };
+      .then((payload) => {
+        if (!ignore) {
+          setData(payload);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!ignore) {
+          setError(err.message);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   if (loading) return <LoadingSkeleton />;
 
   const {
-    featured       = null,
-    trending       = [],
-    latest_articles = [],
-    new_lists      = [],
     editorial_pick = null,
-    top_rated      = [],
+    latest_articles = [],
+    new_lists = [],
+    top_rated = [],
+    trending = [],
   } = data ?? {};
 
+  const spotlight = editorial_pick ?? latest_articles[0] ?? null;
+  const essayRow = latest_articles.filter((article) => article?.slug !== spotlight?.slug).slice(0, 3);
+  const picks = top_rated.length ? top_rated : trending;
+
   return (
-    <div className="flex flex-col gap-20">
+    <div className="flex flex-col gap-14">
+      <HomeHero />
 
-      {/* ── HERO (preserved exactly) ── */}
-      <div className="relative p-8 md:p-12 border-4 border-ink overflow-hidden animate-fade-in-up"
-        style={{ backgroundColor: '#FFD300', boxShadow: '8px 8px 0 0 #000' }}>
-        <div className="absolute top-0 right-0 w-64 h-full opacity-10"
-          style={{ backgroundImage: 'repeating-linear-gradient(45deg,#000 0,#000 2px,transparent 0,transparent 50%)', backgroundSize: '12px 12px' }} />
-        <h1 className="text-5xl md:text-8xl font-serif font-black uppercase relative z-10" style={{ lineHeight: 1.05 }}>
-          Explore Cinema
-        </h1>
-        <p className="mt-4 text-lg md:text-xl max-w-xl relative z-10 font-medium" style={{ fontFamily: 'var(--font-display)' }}>
-          Discover, review, and curate your favourite films with a community of uncompromising critics.
-        </p>
-        {error && (
-          <div className="mt-4 relative z-10 border-4 border-ink bg-white px-4 py-2 text-sm font-bold inline-block">
-            ⚠ Could not load content: {error}
-          </div>
-        )}
-      </div>
-
-      {/* ── MARQUEE TICKER ── */}
-      <div className="border-y-4 border-ink overflow-hidden -my-10 py-3" style={{ backgroundColor: '#000' }}>
-        <div className="flex gap-12 animate-[marquee_22s_linear_infinite] whitespace-nowrap">
-          {['★ DISCOVER CINEMA', '· WRITE ESSAYS', '· JOIN WATCH PARTIES', '· CURATE LISTS', '· RATE FILMS', '★ CINEPHILE COMMUNITY'].concat(
-           ['★ DISCOVER CINEMA', '· WRITE ESSAYS', '· JOIN WATCH PARTIES', '· CURATE LISTS', '· RATE FILMS', '★ CINEPHILE COMMUNITY']
-          ).map((t, i) => (
-            <span key={i} className="text-sm font-black tracking-widest" style={{ color: '#FFD300', fontFamily: 'var(--font-display)' }}>{t}</span>
-          ))}
+      {error && (
+        <div className="border-4 border-ink bg-surface-container-lowest p-5 text-sm font-black">
+          Could not load the home feed: {error}
         </div>
-      </div>
+      )}
 
-      {/* ─── SECTION A: THE GRID ─── */}
-      <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }} variants={stagger}>
-        <motion.div variants={fadeUp}>
-          <SectionHeader label="THIS WEEK" />
-        </motion.div>
-        <motion.div variants={fadeUp}
-          className="grid gap-4"
-          style={{ gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'auto auto' }}>
+      {trending.length > 0 && (
+        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }} variants={stagger}>
+          <SectionHeader kicker="What people are circling" title="Trending Movies" linkTo="/movies" linkLabel="All movies" />
+          <MovieStrip movies={trending} />
+        </motion.section>
+      )}
 
-          {/* Col 1 — Editorial (row-span 2) */}
-          <div style={{ gridRow: 'span 2' }}>
-            <EditorialCell article={editorial_pick} />
-          </div>
+      <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }} variants={stagger} className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+        <div>
+          <SectionHeader kicker="Latest essays" title="Fresh Arguments" linkTo="/articles" linkLabel="All essays" />
+          {essayRow.length > 0 ? (
+            <motion.div variants={stagger} className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-1">
+              {essayRow.map((article, index) => (
+                <EssayCard key={article.article_id ?? article.slug} article={article} index={index} />
+              ))}
+            </motion.div>
+          ) : (
+            <div className="border-4 border-ink bg-surface p-8 text-xl font-black uppercase" style={{ boxShadow: sectionShadow }}>
+              Essays will land here once the community starts publishing.
+            </div>
+          )}
+        </div>
 
-          {/* Col 2 row 1 — trending[0] */}
-          <MovieGridCell movie={trending[0]} index={0} />
-          {/* Col 3 row 1+2 — Featured spotlight */}
-          <div style={{ gridRow: 'span 2' }}>
-            <FeaturedCell movie={featured} />
-          </div>
-          {/* Col 4 row 1 — trending[1] */}
-          <MovieGridCell movie={trending[1]} index={1} />
-          {/* Col 5 row 1 — article yellow */}
-          <ArticleGridCell article={latest_articles[0]} bg="#FFD300" />
-
-          {/* Row 2 */}
-          {/* Col 2 row 2 — trending[2] */}
-          <MovieGridCell movie={trending[2]} index={2} />
-          {/* Col 3 spanned above */}
-          {/* Col 4 row 2 — new list */}
-          <ListGridCell list={new_lists[0]} />
-          {/* Col 5 row 2 — article[1] */}
-          <ArticleGridCell article={latest_articles[1]} bg="#E0F2FE" />
-        </motion.div>
+        <div className="flex flex-col gap-6">
+          <SectionHeader kicker="The long read" title="Editorial Pick" />
+          <FeaturedEditorial article={spotlight} />
+        </div>
       </motion.section>
 
-      {/* ─── SECTION B: LATEST ESSAYS ─── */}
-      {latest_articles.length > 0 && (
-        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
-          <motion.div variants={fadeUp}>
-            <SectionHeader label="LATEST ESSAYS & EDITORIALS" linkTo="/articles" linkLabel="SEE ALL ESSAYS" />
-          </motion.div>
-          <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {latest_articles.map((a, i) => (
-              <motion.div key={a.article_id ?? i} variants={fadeUp}>
-                <ArticleCard article={{
-                  Article_ID: a.article_id, Slug: a.slug, Title: a.title,
-                  Category: a.category, Body: a.excerpt, Cover_Image_URL: a.cover_image_url,
-                  Published_At: a.published_at, Username: a.author_username, flair_label: a.author_flair,
-                }} colorIndex={i} />
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.section>
-      )}
-
-      {/* ─── SECTION C: COMMUNITY LISTS ─── */}
-      {new_lists.length > 0 && (
-        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
-          <motion.div variants={fadeUp}>
-            <SectionHeader label="FRESH FROM THE COMMUNITY" linkTo="/lists" linkLabel="ALL LISTS" />
-          </motion.div>
-          <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {new_lists.map((list, i) => <CommunityListCard key={list.list_id ?? i} list={list} />)}
-          </motion.div>
-        </motion.section>
-      )}
-
-      {/* ─── SECTION D: THE CANON ─── */}
-      {top_rated.length > 0 && (
-        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
-          <motion.div variants={fadeUp}>
-            <SectionHeader label="THE CANON" />
-            <p className="text-sm font-bold opacity-60 -mt-4 mb-8" style={{ fontFamily: 'var(--font-mono)' }}>
-              HIGHEST RATED BY OUR COMMUNITY
-            </p>
-          </motion.div>
-          <div className="flex gap-6 overflow-x-auto pb-4"
-            style={{ scrollbarWidth: 'thin', scrollbarColor: '#000 transparent' }}>
-            {top_rated.map((m, i) => <CanonCard key={m.movie_id ?? i} movie={m} rank={i + 1} />)}
-          </div>
-        </motion.section>
-      )}
-
-      {/* ─── TRENDING GRID (fallback full movie grid) ─── */}
-      {trending.length > 3 && (
+      {picks.length > 0 && (
         <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }} variants={stagger}>
-          <motion.div variants={fadeUp}>
-            <SectionHeader label="TRENDING NOW" linkTo="/movies" linkLabel="ALL FILMS" />
-          </motion.div>
-          <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-            {trending.slice(3).map((m, i) => (
-              <motion.div key={m.movie_id ?? i} variants={fadeUp}>
-                <MovieGridCell movie={m} index={i + 3} />
-              </motion.div>
+          <SectionHeader kicker="CineSocial picks" title="Worth Starting With" linkTo="/search" linkLabel="Find more" />
+          <MovieStrip movies={picks.slice(0, 4)} />
+        </motion.section>
+      )}
+
+      {new_lists.length > 0 && (
+        <motion.section initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }} variants={stagger}>
+          <SectionHeader kicker="Community shelves" title="New Lists" linkTo="/lists" linkLabel="Browse lists" />
+          <motion.div variants={stagger} className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {new_lists.slice(0, 3).map((list, index) => (
+              <ListPreview key={list.list_id ?? index} list={list} index={index} />
             ))}
           </motion.div>
         </motion.section>
       )}
-
     </div>
   );
 }

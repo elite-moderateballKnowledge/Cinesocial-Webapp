@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 /** Deterministic palette per first character so the same name always gets the same color. */
 const PALETTES = [
-  { bg: '#FFD300', fg: '#000000' }, // primary yellow
+  { bg: '#A89200', fg: '#000000' }, // primary yellow
   { bg: '#FF3D00', fg: '#FFFFFF' }, // secondary red
   { bg: '#6C3CE1', fg: '#FFFFFF' }, // purple
   { bg: '#00A3E0', fg: '#FFFFFF' }, // blue

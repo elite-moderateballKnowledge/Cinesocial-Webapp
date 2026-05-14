@@ -68,9 +68,9 @@ function StarPicker({ value, onChange }) {
 
 /** Genre pill */
 function GenrePill({ name, idx }) {
-  const COLORS = ['#FFD300', '#FF3D00', '#6C3CE1', '#00A3E0', '#00C853', '#FF6B35'];
+  const COLORS = ['#A89200', '#FF3D00', '#6C3CE1', '#00A3E0', '#00C853', '#FF6B35'];
   const bg = COLORS[idx % COLORS.length];
-  const fg = bg === '#FFD300' || bg === '#00C853' ? '#000' : '#fff';
+  const fg = bg === '#A89200' || bg === '#00C853' ? '#000' : '#fff';
   return (
     <span
       className="px-3 py-1 border-4 border-ink text-sm font-bold"
@@ -83,7 +83,7 @@ function GenrePill({ name, idx }) {
 
 /** Single actor card in the filmstrip */
 function CastCard({ person, idx }) {
-  const BORDER_COLORS = ['#FFD300', '#FF3D00', '#6C3CE1', '#00A3E0', '#00C853'];
+  const BORDER_COLORS = ['#A89200', '#FF3D00', '#6C3CE1', '#00A3E0', '#00C853'];
   const borderColor = BORDER_COLORS[idx % BORDER_COLORS.length];
   return (
     <Link
@@ -207,7 +207,7 @@ export default function MovieDetails() {
   if (loading) {
     return (
       <div className="flex flex-col gap-4 animate-pulse">
-        <div className="h-96 border-4 border-ink" style={{ backgroundColor: '#FFD300' }} />
+        <div className="h-96 border-4 border-ink" style={{ backgroundColor: '#A89200' }} />
         <div className="h-8 border-4 border-ink bg-surface-container w-2/3" />
         <div className="h-8 border-4 border-ink bg-surface-container w-1/2" />
       </div>
@@ -262,7 +262,7 @@ export default function MovieDetails() {
           {/* Poster */}
           <div
             className="shrink-0 w-48 md:w-60 border-4 border-ink self-start animate-slide-left"
-            style={{ boxShadow: '8px 8px 0 0 #FFD300' }}
+            style={{ boxShadow: '8px 8px 0 0 #A89200' }}
           >
             <div className="aspect-[2/3]">
               <ImageWithFallback
@@ -278,7 +278,7 @@ export default function MovieDetails() {
           <div className="flex flex-col gap-4 flex-1 animate-fade-in-up delay-150">
             <h1
               className="text-4xl md:text-6xl font-serif font-black uppercase leading-none"
-              style={{ color: '#FFD300', textShadow: '3px 3px 0 #000, -1px -1px 0 #000' }}
+              style={{ color: '#A89200', textShadow: '3px 3px 0 #000, -1px -1px 0 #000' }}
             >
               {title}
             </h1>
@@ -287,7 +287,7 @@ export default function MovieDetails() {
             <div className="flex flex-wrap gap-3 items-center">
               <div
                 className="flex items-center gap-2 px-4 py-2 border-4 border-ink font-black text-xl"
-                style={{ backgroundColor: '#FFD300', color: '#000' }}
+                style={{ backgroundColor: '#A89200', color: '#000' }}
               >
                 <StarDisplay rating={avgRating} size="1.2rem" />
                 <span style={{ fontFamily: 'var(--font-display)' }}>{formatRating(avgRating)}</span>
@@ -430,7 +430,7 @@ export default function MovieDetails() {
         {user && (
           <div
             className="mb-10 border-4 border-ink p-8"
-            style={{ backgroundColor: '#F5F5F0', boxShadow: '8px 8px 0 0 #FFD300' }}
+            style={{ backgroundColor: '#F5F5F0', boxShadow: '8px 8px 0 0 #A89200' }}
           >
             <h3 className="text-2xl font-serif font-black mb-6">WRITE A REVIEW</h3>
             <form onSubmit={submitReview} className="flex flex-col gap-6">

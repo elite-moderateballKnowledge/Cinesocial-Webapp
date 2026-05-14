@@ -76,7 +76,7 @@ export default function ActorDetails() {
         <div className="relative z-10 flex flex-col md:flex-row gap-8 p-8 md:p-10 items-start">
           <div
             className="shrink-0 w-44 h-44 md:w-52 md:h-52 border-4 border-ink overflow-hidden"
-            style={{ borderRadius: '50%', boxShadow: '8px 8px 0 0 #FFD300' }}
+            style={{ borderRadius: '50%', boxShadow: '8px 8px 0 0 #A89200' }}
           >
             <ImageWithFallback
               src={person.Photo_URL}
@@ -90,7 +90,7 @@ export default function ActorDetails() {
           <div className="flex flex-col gap-4 flex-1 min-w-0">
             <h1
               className="text-4xl md:text-5xl font-serif font-black uppercase leading-tight"
-              style={{ color: '#FFD300', textShadow: '3px 3px 0 #000, -1px -1px 0 #000' }}
+              style={{ color: '#A89200', textShadow: '3px 3px 0 #000, -1px -1px 0 #000' }}
             >
               {person.Full_Name}
             </h1>
@@ -140,7 +140,7 @@ export default function ActorDetails() {
             {person.wikiSummary && person.Bio && person.Bio.trim() && person.wikiSummary !== person.Bio && (
               <p
                 className="text-sm leading-relaxed max-w-3xl opacity-80 border-l-4 pl-4"
-                style={{ borderColor: '#FFD300', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-display)' }}
+                style={{ borderColor: '#A89200', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-display)' }}
               >
                 {person.wikiSummary}
               </p>
@@ -153,7 +153,7 @@ export default function ActorDetails() {
         <div className="flex items-center gap-4 mb-6">
           <h2
             className="text-3xl font-serif font-black px-4 py-1 border-4 border-ink"
-            style={{ backgroundColor: '#FFD300', color: '#000', boxShadow: '4px 4px 0 0 #000' }}
+            style={{ backgroundColor: '#A89200', color: '#000', boxShadow: '4px 4px 0 0 #000' }}
           >
             FILMOGRAPHY
           </h2>

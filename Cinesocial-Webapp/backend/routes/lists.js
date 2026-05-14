@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const listController = require('../controllers/listController');
 const verifyToken = require('../middleware/auth');
+const optionalAuth = require('../middleware/optionalAuth');
 
 router.get('/watchlist', verifyToken, listController.getWatchlist);
 router.post('/watchlist', verifyToken, listController.addToWatchlist);
@@ -13,6 +14,9 @@ router.get('/public', listController.getPublicLists);
 router.get('/public/ranked', listController.getPublicListsRanked);
 router.get('/unlisted-movies', listController.getMoviesNotInAnyList);
 router.post('/', verifyToken, listController.createList);
+router.get('/:id', optionalAuth, listController.getListById);
+router.post('/:id/movies', verifyToken, listController.addMovieToList);
+router.delete('/:id/movies/:movieId', verifyToken, listController.removeMovieFromList);
 
 module.exports = router;
 

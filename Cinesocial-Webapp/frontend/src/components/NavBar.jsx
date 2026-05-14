@@ -18,7 +18,7 @@ function NavLink({ to, children }) {
       {active && (
         <span
           className="absolute inset-0 -z-10"
-          style={{ backgroundColor: '#FFD300', transform: 'rotate(-1deg)', borderRadius: '2px' }}
+          style={{ backgroundColor: '#A89200', transform: 'rotate(-1deg)', borderRadius: '2px' }}
         />
       )}
       <span className={active ? 'relative' : 'hover:underline decoration-4 underline-offset-4'}>
@@ -34,7 +34,7 @@ export default function NavBar() {
   return (
     <nav
       className="border-b-4 border-ink px-8 py-4 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center sticky top-0 z-50"
-      style={{ backgroundColor: '#FFD300' }}
+      style={{ backgroundColor: '#A89200' }}
     >
       {/* Brand */}
       <Logo variant="dark" />
@@ -45,9 +45,9 @@ export default function NavBar() {
         <NavLink to="/search">SEARCH</NavLink>
         <NavLink to="/articles">ESSAYS</NavLink>
         <NavLink to="/members">MEMBERS</NavLink>
+        <NavLink to="/lists">LISTS</NavLink>
         {user ? (
           <>
-            <NavLink to="/lists">LISTS</NavLink>
             <NavLink to="/parties">PARTIES</NavLink>
             <NavLink to="/profile">PROFILE</NavLink>
             <button

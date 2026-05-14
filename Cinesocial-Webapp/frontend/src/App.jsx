@@ -5,6 +5,7 @@ import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 
 import Home from './pages/Home';
+import Movies from './pages/Movies';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MovieDetails from './pages/MovieDetails';
@@ -13,6 +14,7 @@ import Search from './pages/Search';
 import Profile from './pages/Profile';
 import Parties from './pages/Parties';
 import Lists from './pages/Lists';
+import ListDetails from './pages/ListDetails';
 import Subscription from './pages/Subscription';
 import InfoPage from './pages/InfoPage';
 import Articles from './pages/Articles';
@@ -28,7 +30,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen flex flex-col relative bg-surface font-mono text-ink">
+        <div className="min-h-screen flex flex-col relative bg-page-bg font-mono text-ink">
           <NavBar />
           <main className="flex-1 p-8 md:p-12 container mx-auto max-w-7xl">
             <ErrorBoundary>
@@ -38,7 +40,8 @@ function App() {
                 <Route path="/admin/*" element={<Navigate to="/admin/login" />} />
                 
                 <Route path="/" element={<Home />} />
-                <Route path="/movies" element={<Home />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/movies" element={<Movies />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/movie/:id" element={<MovieDetails />} />
@@ -48,6 +51,7 @@ function App() {
                 <Route path="/profile/:id" element={<Profile />} />
                 <Route path="/parties" element={<Parties />} />
                 <Route path="/lists" element={<Lists />} />
+                <Route path="/lists/:id" element={<ListDetails />} />
                 <Route path="/subscription" element={<Subscription />} />
                 <Route path="/members" element={<Members />} />
                 <Route path="/friends" element={<Friends />} />

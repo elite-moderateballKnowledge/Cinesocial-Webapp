@@ -26,7 +26,7 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center p-4 m-0 absolute top-0 left-0 z-50">
-      <div className="bg-[#FFD300] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 md:p-12 max-w-md w-full">
+      <div className="bg-[#A89200] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 md:p-12 max-w-md w-full">
         <h1 className="text-4xl font-serif font-bold text-black text-center mb-8 uppercase tracking-widest">
           Admin Access
         </h1>
@@ -58,7 +58,7 @@ export default function AdminLogin() {
           </div>
           <button
             type="submit"
-            className="w-full bg-black text-[#FFD300] font-bold text-xl py-4 uppercase hover:bg-gray-900 transition-colors mt-4 border-2 border-black"
+            className="w-full bg-black text-[#A89200] font-bold text-xl py-4 uppercase hover:bg-gray-900 transition-colors mt-4 border-2 border-black"
           >
             Log In
           </button>

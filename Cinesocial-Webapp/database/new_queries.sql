@@ -588,11 +588,16 @@ CREATE PROCEDURE sp_CreateParty
     @movieId     INT,
     @max         INT,
     @inviteCode  VARCHAR(20),
+    @location    VARCHAR(255),
+    @scheduledAt DATETIME,
     @newPartyId  INT OUTPUT
 AS
 BEGIN
-    INSERT INTO Parties (Party_Name, Created_By, Movie_ID, Max_Members, Invite_Code, Is_Active)
-    VALUES (@name, @createdBy, @movieId, @max, @inviteCode, 1);
+    IF @max < 4
+        THROW 50001, 'Max members must be at least 4.', 1;
+
+    INSERT INTO Parties (Party_Name, Created_By, Movie_ID, Max_Members, Invite_Code, Location_Description, Scheduled_At, Is_Active)
+    VALUES (@name, @createdBy, @movieId, @max, @inviteCode, @location, @scheduledAt, 1);
 
     SET @newPartyId = SCOPE_IDENTITY();
 
@@ -611,20 +616,37 @@ SELECT
     m.Title      AS movie,
     (SELECT COUNT(*) FROM P_Members pm WHERE pm.Party_ID = p.Party_ID) AS current_member_count,
     p.Max_Members AS max_members,
+    p.Location_Description AS location_description,
+    p.Scheduled_At AS scheduled_at,
     p.Is_Active   AS is_active
 FROM Parties p
 JOIN Users  u ON p.Created_By = u.User_ID
 JOIN Movies m ON p.Movie_ID   = m.Movie_ID
-WHERE p.Is_Active = 1;
+WHERE p.Is_Active = 1
+  AND (p.Scheduled_At IS NULL OR p.Scheduled_At > GETDATE());
 GO
 
 -- Query F18 (by 24L-3056): All active parties with host and movie info
 SELECT p.Party_ID, p.Party_Name, u.Username AS host, m.Title AS movie,
-       p.Max_Members, p.Is_Active
+       p.Max_Members, p.Location_Description, p.Scheduled_At, p.Is_Active,
+       (SELECT COUNT(*) FROM P_Members pm WHERE pm.Party_ID = p.Party_ID) AS current_member_count
 FROM Parties p
 JOIN Users  u ON p.Created_By = u.User_ID
 JOIN Movies m ON p.Movie_ID   = m.Movie_ID
-WHERE p.Is_Active = 1;
+WHERE p.Is_Active = 1
+  AND (p.Scheduled_At IS NULL OR p.Scheduled_At > GETDATE());
+GO
+
+-- DML: Cancel parties that reach their scheduled time with fewer than 4 members.
+UPDATE p
+SET Is_Active = 0,
+    Cancelled_At = GETDATE(),
+    Cancelled_Reason = 'Automatically cancelled because fewer than 4 members joined before party time.'
+FROM Parties p
+WHERE p.Is_Active = 1
+  AND p.Scheduled_At IS NOT NULL
+  AND p.Scheduled_At <= GETDATE()
+  AND (SELECT COUNT(*) FROM P_Members pm WHERE pm.Party_ID = p.Party_ID) < 4;
 GO
 
 

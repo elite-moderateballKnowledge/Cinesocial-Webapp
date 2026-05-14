@@ -223,7 +223,7 @@ export default function Friends() {
       <div className="flex flex-col gap-8">
         <div className="flex items-center gap-4 border-b-4 border-ink pb-4">
           <h2 className="text-3xl font-serif font-black uppercase">REQUESTS</h2>
-          <span className="bg-[#FFD300] text-ink font-mono font-bold px-3 py-1 border-2 border-ink">
+          <span className="bg-[#A89200] text-ink font-mono font-bold px-3 py-1 border-2 border-ink">
             {requests.length}
           </span>
         </div>
@@ -248,7 +248,7 @@ export default function Friends() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => acceptRequest(req.Request_ID)} className="flex-1 bg-ink text-[#FFD300] font-black font-display text-sm py-2 border-2 border-ink" style={{ boxShadow: '4px 4px 0 0 #000' }}>
+                    <button onClick={() => acceptRequest(req.Request_ID)} className="flex-1 bg-ink text-[#A89200] font-black font-display text-sm py-2 border-2 border-ink" style={{ boxShadow: '4px 4px 0 0 #000' }}>
                       ACCEPT
                     </button>
                     <button onClick={() => declineRequest(req.Request_ID)} className="flex-1 bg-surface hover:bg-red-500 hover:text-white font-black font-display text-sm py-2 border-2 border-ink transition-colors">

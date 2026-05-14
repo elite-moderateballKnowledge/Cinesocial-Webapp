@@ -48,7 +48,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen w-full bg-[#1a1a1a] text-white flex absolute top-0 left-0 z-50 font-mono">
       {/* Sidebar */}
       <aside className="w-[220px] fixed h-screen border-r border-gray-800 bg-[#111] flex flex-col pt-6 pb-6">
-        <div className="px-6 mb-10 text-[#FFD300]">
+        <div className="px-6 mb-10 text-[#A89200]">
           <Logo variant="light" className="text-3xl" />
         </div>
         <nav className="flex-1 flex flex-col gap-2 px-4">
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center justify-between p-3 text-sm tracking-widest ${isActive
-                    ? 'border-l-4 border-[#FFD300] bg-gray-800/50 text-[#FFD300] font-bold'
+                    ? 'border-l-4 border-[#A89200] bg-gray-800/50 text-[#A89200] font-bold'
                     : 'border-l-4 border-transparent text-gray-400 hover:text-white hover:bg-gray-800/30'
                   } transition-colors`}
               >
@@ -121,7 +121,7 @@ function DashboardPanel({ stats, setActiveTab }) {
   return (
     <div className="flex flex-col gap-8">
       {stats.pending_articles > 0 && (
-        <div className="bg-[#FFD300] border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between text-black">
+        <div className="bg-[#A89200] border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between text-black">
           <div className="flex items-center gap-4">
             <span className="text-3xl">⚠</span>
             <span className="text-xl font-bold font-mono tracking-wider">{stats.pending_articles} ARTICLES AWAITING REVIEW</span>
@@ -142,7 +142,7 @@ function DashboardPanel({ stats, setActiveTab }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((s, i) => (
           <div key={i} className="bg-[#111] border-2 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-2">
-            <span className="text-5xl font-serif text-[#FFD300] font-bold">{s.value}</span>
+            <span className="text-5xl font-serif text-[#A89200] font-bold">{s.value}</span>
             <span className="text-gray-400 text-sm tracking-widest">{s.label}</span>
           </div>
         ))}
@@ -195,7 +195,7 @@ function UsersPanel() {
             placeholder="Search users..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full bg-[#111] border border-gray-700 p-2 pl-10 text-white focus:outline-none focus:border-[#FFD300]"
+            className="w-full bg-[#111] border border-gray-700 p-2 pl-10 text-white focus:outline-none focus:border-[#A89200]"
           />
           <SearchIcon size={16} className="absolute left-3 top-3 text-gray-500" />
         </div>
@@ -308,7 +308,7 @@ function MoviesPanel() {
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="bg-[#111] border-2 border-gray-800 p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold font-serif text-[#FFD300]">EDIT MOVIE</h2>
+              <h2 className="text-2xl font-bold font-serif text-[#A89200]">EDIT MOVIE</h2>
               <button onClick={() => setEditingMovie(null)} className="text-gray-400 hover:text-white"><X size={24} /></button>
             </div>
             <form onSubmit={handleEditSubmit} className="flex flex-col gap-4 text-sm">
@@ -350,7 +350,7 @@ function MoviesPanel() {
               </div>
               <div className="flex justify-end gap-3 mt-4">
                 <button type="button" onClick={() => setEditingMovie(null)} className="px-4 py-2 border border-gray-700 text-gray-400 hover:bg-gray-800">CANCEL</button>
-                <button type="submit" className="px-4 py-2 bg-[#FFD300] text-black font-bold border-2 border-black hover:bg-yellow-400">SAVE CHANGES</button>
+                <button type="submit" className="px-4 py-2 bg-[#A89200] text-black font-bold border-2 border-black hover:bg-[#BCA500]">SAVE CHANGES</button>
               </div>
             </form>
           </div>
@@ -366,11 +366,11 @@ function MoviesPanel() {
               placeholder="Search movies..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="w-full bg-[#111] border border-gray-700 p-2 pl-10 text-white focus:outline-none focus:border-[#FFD300]"
+              className="w-full bg-[#111] border border-gray-700 p-2 pl-10 text-white focus:outline-none focus:border-[#A89200]"
             />
             <SearchIcon size={16} className="absolute left-3 top-3 text-gray-500" />
           </div>
-          <button className="bg-[#FFD300] text-black px-4 font-bold border-2 border-black hover:bg-yellow-400 flex items-center gap-2">
+          <button className="bg-[#A89200] text-black px-4 font-bold border-2 border-black hover:bg-[#BCA500] flex items-center gap-2">
             + ADD MOVIE
           </button>
         </div>
@@ -395,7 +395,7 @@ function MoviesPanel() {
                 </td>
                 <td className="p-3 font-bold text-base">{m.Title}</td>
                 <td className="p-3 text-gray-400">{m.Release_date ? new Date(m.Release_date).getFullYear() : 'N/A'}</td>
-                <td className="p-3 text-[#FFD300] font-bold">{parseFloat(m.A_Rating || 0).toFixed(1)}</td>
+                <td className="p-3 text-[#A89200] font-bold">{parseFloat(m.A_Rating || 0).toFixed(1)}</td>
                 <td className="p-3 flex justify-end gap-2 items-center h-14">
                   <button onClick={() => setEditingMovie(m)} className="px-3 py-1 text-xs font-bold border border-gray-600 text-gray-400 hover:text-white">EDIT</button>
                   <button onClick={() => handleDelete(m.Movie_ID)} className="px-3 py-1 text-xs font-bold border border-red-500 text-red-500 hover:bg-red-500/10">DELETE</button>
@@ -463,8 +463,8 @@ function ArticlesPanel() {
       <div className="flex justify-between items-end border-b border-gray-800 pb-4">
         <h1 className="text-3xl font-serif font-bold text-white uppercase tracking-widest">Articles</h1>
         <div className="flex gap-4">
-          <button onClick={() => setTab('PENDING')} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'PENDING' ? 'border-[#FFD300] text-[#FFD300]' : 'border-transparent text-gray-500'}`}>PENDING</button>
-          <button onClick={() => setTab('ALL')} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'ALL' ? 'border-[#FFD300] text-[#FFD300]' : 'border-transparent text-gray-500'}`}>ALL ARTICLES</button>
+          <button onClick={() => setTab('PENDING')} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'PENDING' ? 'border-[#A89200] text-[#A89200]' : 'border-transparent text-gray-500'}`}>PENDING</button>
+          <button onClick={() => setTab('ALL')} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'ALL' ? 'border-[#A89200] text-[#A89200]' : 'border-transparent text-gray-500'}`}>ALL ARTICLES</button>
         </div>
       </div>
 
@@ -476,17 +476,17 @@ function ArticlesPanel() {
             <div key={a.Article_ID} className="bg-[#111] border-2 border-gray-800 p-6 flex flex-col md:flex-row gap-6 hover:border-gray-600 transition-colors">
               <div className="flex-1 flex flex-col gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="bg-[#FFD300] text-black px-2 py-0.5 text-xs font-bold uppercase">{a.Category}</span>
+                  <span className="bg-[#A89200] text-black px-2 py-0.5 text-xs font-bold uppercase">{a.Category}</span>
                   <span className="text-gray-500 text-sm">{new Date(a.Created_At).toLocaleString()}</span>
                 </div>
                 <h2 className="text-2xl font-serif font-bold">{a.Title}</h2>
-                <div className="text-sm text-gray-400">By <span className="text-[#FFD300] font-bold">@{a.Username}</span></div>
+                <div className="text-sm text-gray-400">By <span className="text-[#A89200] font-bold">@{a.Username}</span></div>
                 <p className="text-gray-300 text-sm leading-relaxed mt-2">{a.Excerpt}...</p>
               </div>
               <div className="flex flex-col gap-3 justify-center min-w-[140px]">
                 <button
                   onClick={() => handleApprove(a.Article_ID)}
-                  className="bg-[#FFD300] text-black font-bold py-3 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-transform"
+                  className="bg-[#A89200] text-black font-bold py-3 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-transform"
                 >
                   <Check size={18} /> APPROVE
                 </button>
@@ -635,8 +635,8 @@ function AnalyticsPanel() {
       <div className="flex justify-between items-end border-b border-gray-800 pb-4">
         <h1 className="text-3xl font-serif font-bold text-white uppercase tracking-widest">Analytics</h1>
         <div className="flex gap-4">
-          <button onClick={() => { setTab('ACTORS'); setPage(1); }} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'ACTORS' ? 'border-[#FFD300] text-[#FFD300]' : 'border-transparent text-gray-500'}`}>BY ACTOR</button>
-          <button onClick={() => { setTab('YEARS'); setPage(1); }} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'YEARS' ? 'border-[#FFD300] text-[#FFD300]' : 'border-transparent text-gray-500'}`}>BY RELEASE YEAR</button>
+          <button onClick={() => { setTab('ACTORS'); setPage(1); }} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'ACTORS' ? 'border-[#A89200] text-[#A89200]' : 'border-transparent text-gray-500'}`}>BY ACTOR</button>
+          <button onClick={() => { setTab('YEARS'); setPage(1); }} className={`pb-4 border-b-2 font-bold px-2 ${tab === 'YEARS' ? 'border-[#A89200] text-[#A89200]' : 'border-transparent text-gray-500'}`}>BY RELEASE YEAR</button>
         </div>
       </div>
 
@@ -655,7 +655,7 @@ function AnalyticsPanel() {
               <tr key={i} className="border-b border-gray-800 hover:bg-[#111] transition-colors text-sm">
                 <td className="p-3 font-bold">{tab === 'ACTORS' ? row.Actor_Name : row.Release_Year || 'Unknown'}</td>
                 <td className="p-3 text-gray-400">{row.Total_Movies}</td>
-                <td className="p-3 text-[#FFD300] font-bold">{parseFloat(row.Avg_Rating).toFixed(1)}</td>
+                <td className="p-3 text-[#A89200] font-bold">{parseFloat(row.Avg_Rating).toFixed(1)}</td>
                 <td className="p-3 text-gray-400">{row.Total_Reviews}</td>
               </tr>
             ))}
@@ -727,7 +727,7 @@ function SettingsPanel() {
         <button 
           onClick={handleSave} 
           disabled={saving}
-          className="bg-[#FFD300] text-black px-6 py-2 font-bold hover:bg-yellow-400 disabled:opacity-50 transition-colors"
+          className="bg-[#A89200] text-black px-6 py-2 font-bold hover:bg-[#BCA500] disabled:opacity-50 transition-colors"
         >
           {saving ? 'SAVING...' : 'SAVE CHANGES'}
         </button>
@@ -736,7 +736,7 @@ function SettingsPanel() {
       <div className="flex flex-col gap-8">
         {/* General Settings */}
         <div className="border-2 border-gray-800 bg-[#111] p-6">
-          <h2 className="text-xl font-bold font-serif mb-6 text-[#FFD300]">SITE CONFIGURATION</h2>
+          <h2 className="text-xl font-bold font-serif mb-6 text-[#A89200]">SITE CONFIGURATION</h2>
           
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
@@ -746,7 +746,7 @@ function SettingsPanel() {
               </div>
               <button 
                 onClick={() => handleToggle('Maintenance_Mode')}
-                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${settings.Maintenance_Mode === 'true' ? 'bg-[#FFD300]' : 'bg-gray-600'}`}
+                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${settings.Maintenance_Mode === 'true' ? 'bg-[#A89200]' : 'bg-gray-600'}`}
               >
                 <div className={`bg-black w-6 h-6 rounded-full shadow-md transform transition-transform ${settings.Maintenance_Mode === 'true' ? 'translate-x-6' : 'translate-x-0'}`}></div>
               </button>
@@ -759,7 +759,7 @@ function SettingsPanel() {
               </div>
               <button 
                 onClick={() => handleToggle('Disable_Signups')}
-                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${settings.Disable_Signups === 'true' ? 'bg-[#FFD300]' : 'bg-gray-600'}`}
+                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${settings.Disable_Signups === 'true' ? 'bg-[#A89200]' : 'bg-gray-600'}`}
               >
                 <div className={`bg-black w-6 h-6 rounded-full shadow-md transform transition-transform ${settings.Disable_Signups === 'true' ? 'translate-x-6' : 'translate-x-0'}`}></div>
               </button>

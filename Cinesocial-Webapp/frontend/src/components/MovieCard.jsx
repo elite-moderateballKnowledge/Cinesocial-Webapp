@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import ImageWithFallback from './ImageWithFallback';
 
-const SHADOW_COLORS = ['rgba(0,0,0,1)', '#FFD300', '#FF3D00', '#6C3CE1', '#00A3E0', '#00C853'];
+const SHADOW_COLORS = ['rgba(0,0,0,1)', '#A89200', '#FF3D00', '#6C3CE1', '#00A3E0', '#00C853'];
 
 const formatYear = (date) => {
   const y = new Date(date).getFullYear();
@@ -43,7 +43,7 @@ export default function MovieCard({ movie, colorIndex = 0 }) {
           {/* Year badge */}
           <div
             className="absolute top-3 left-3 border-2 border-ink px-2 py-0.5 text-xs font-bold"
-            style={{ backgroundColor: '#FFD300', fontFamily: 'var(--font-display)' }}
+            style={{ backgroundColor: '#A89200', fontFamily: 'var(--font-display)' }}
           >
             {movie.Release_date ? formatYear(movie.Release_date) : 'N/A'}
           </div>
@@ -65,7 +65,7 @@ export default function MovieCard({ movie, colorIndex = 0 }) {
             </span>
             <span
               className="px-3 py-1 border-2 border-ink text-sm font-bold"
-              style={{ backgroundColor: '#FFD300', fontFamily: 'var(--font-display)' }}
+              style={{ backgroundColor: '#A89200', fontFamily: 'var(--font-display)' }}
             >
               ★ {formatRating(movie.A_Rating)}
             </span>

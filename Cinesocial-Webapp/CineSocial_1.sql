@@ -523,13 +523,13 @@ VALUES
 -- ============================================================
 -- 14. PARTIES (watch parties — requires sub with Can_Join_Parties)
 -- ============================================================
-INSERT INTO Parties (Party_Name, Created_By, Movie_ID, Max_Members, Invite_Code, Is_Active)
+INSERT INTO Parties (Party_Name, Created_By, Movie_ID, Max_Members, Invite_Code, Location_Description, Scheduled_At, Is_Active)
 VALUES
-('Nolan Night',             1, 1,  10, 'NOLAN2025',  1),
-('Parasite Watch-Along',    2, 8,  8,  'PARA8008',   1),
-('90s Crime Night',         3, 5,  6,  'PULP1994',   1),
-('Dune Rewatch Party',      9, 10, 15, 'DUNE2024',   1),
-('Shawshank Classic',       6, 13, 12, 'SHAW1994',   0);
+('Nolan Night',             1, 1,  10, 'NOLAN2025', 'Screen 2, CineSocial Clubhouse', DATEADD(DAY, 2, GETDATE()), 1),
+('Parasite Watch-Along',    2, 8,  8,  'PARA8008',  'Downtown Mini Theater', DATEADD(DAY, 3, GETDATE()), 1),
+('90s Crime Night',         3, 5,  6,  'PULP1994',  'Film Society Room B', DATEADD(DAY, 4, GETDATE()), 1),
+('Dune Rewatch Party',      9, 10, 15, 'DUNE2024',  'Open Air Rooftop Cinema', DATEADD(DAY, 5, GETDATE()), 1),
+('Shawshank Classic',       6, 13, 12, 'SHAW1994',  'Community Hall Main Screen', DATEADD(DAY, -1, GETDATE()), 0);
 
 -- ============================================================
 -- 15. P_MEMBERS (party members)

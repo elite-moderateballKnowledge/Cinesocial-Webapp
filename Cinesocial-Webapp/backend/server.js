@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
+const partyController = require('./controllers/partyController');
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -42,6 +43,12 @@ const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+setInterval(() => {
+  partyController.cancelUnderfilledDueParties().catch((err) => {
+    console.error('[PARTY CHECK] Failed to cancel underfilled parties:', err);
+  });
+}, 60 * 1000);
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {

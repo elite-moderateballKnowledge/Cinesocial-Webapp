@@ -91,8 +91,8 @@ export default function Articles() {
               style={{
                 fontFamily: 'var(--font-display)',
                 backgroundColor: active ? '#000' : 'transparent',
-                color:           active ? '#FFD300' : '#000',
-                boxShadow:       active ? '4px 4px 0 0 #FFD300' : '4px 4px 0 0 #000',
+                color:           active ? '#A89200' : '#000',
+                boxShadow:       active ? '4px 4px 0 0 #A89200' : '4px 4px 0 0 #000',
                 transform:       active ? 'translate(-2px,-2px)' : '',
               }}
             >

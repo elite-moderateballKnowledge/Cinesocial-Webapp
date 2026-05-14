@@ -7,7 +7,7 @@ const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
 const CATEGORY_COLORS = {
   ESSAY: '#6C3CE1', EDITORIAL: '#FF3D00', ANALYSIS: '#00A3E0',
-  REVIEW: '#00C853', 'HOT TAKE': '#FFD300',
+  REVIEW: '#00C853', 'HOT TAKE': '#A89200',
 };
 
 function formatDate(d) {
@@ -100,7 +100,7 @@ export default function ArticleDetail() {
   };
 
   const { article, related } = data;
-  const catColor = CATEGORY_COLORS[article.Category] ?? '#FFD300';
+  const catColor = CATEGORY_COLORS[article.Category] ?? '#A89200';
 
   return (
     <article className="animate-fade-in max-w-5xl mx-auto">
@@ -142,7 +142,7 @@ export default function ArticleDetail() {
         <div className="flex-1 min-w-0">
           {/* Author card */}
           <div className="border-4 border-ink p-5 mb-10 flex items-center gap-5"
-            style={{ boxShadow: '6px 6px 0 0 #FFD300' }}>
+            style={{ boxShadow: '6px 6px 0 0 #A89200' }}>
             <div className="w-16 h-16 border-4 border-ink flex items-center justify-center flex-shrink-0 text-2xl font-black"
               style={{ backgroundColor: catColor }}>
               {article.Username?.charAt(0).toUpperCase() ?? '?'}
@@ -151,7 +151,7 @@ export default function ArticleDetail() {
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <span className="font-black text-lg" style={{ fontFamily: 'var(--font-display)' }}>{article.Username}</span>
                 {article.flair_label && (
-                  <span className="px-2 py-0.5 border-2 border-ink text-xs font-black" style={{ backgroundColor: '#FFD300' }}>
+                  <span className="px-2 py-0.5 border-2 border-ink text-xs font-black" style={{ backgroundColor: '#A89200' }}>
                     {article.flair_label}
                   </span>
                 )}
@@ -183,7 +183,7 @@ export default function ArticleDetail() {
                   type="submit" 
                   disabled={submittingComment || !newComment.trim()}
                   className="neo-btn px-6 disabled:opacity-50"
-                  style={{ backgroundColor: '#FFD300', color: '#000' }}>
+                  style={{ backgroundColor: '#A89200', color: '#000' }}>
                   POST
                 </button>
               </form>
@@ -199,7 +199,7 @@ export default function ArticleDetail() {
               ) : (
                 comments.map(c => (
                   <div key={c.Comment_ID} className="border-2 border-ink p-4 flex gap-4">
-                    <div className="w-10 h-10 border-2 border-ink flex items-center justify-center font-black flex-shrink-0" style={{ backgroundColor: '#FFD300' }}>
+                    <div className="w-10 h-10 border-2 border-ink flex items-center justify-center font-black flex-shrink-0" style={{ backgroundColor: '#A89200' }}>
                       {c.Username?.charAt(0).toUpperCase()}
                     </div>
                     <div>

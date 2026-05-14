@@ -25,13 +25,13 @@ export default function ReviewCard({ review }) {
   return (
     <div
       className={`neo-card mb-6 relative overflow-hidden animate-fade-in-up ${isPinned ? 'border-primary' : ''}`}
-      style={isPinned ? { borderColor: '#FFD300' } : {}}
+      style={isPinned ? { borderColor: '#A89200' } : {}}
     >
       {/* Pinned accent bar */}
       {isPinned && (
         <div
           className="absolute left-0 top-0 bottom-0 w-1.5"
-          style={{ backgroundColor: '#FFD300' }}
+          style={{ backgroundColor: '#A89200' }}
         />
       )}
 
@@ -53,7 +53,7 @@ export default function ReviewCard({ review }) {
             <div className="font-bold flex items-center gap-2 text-base" style={{ fontFamily: 'var(--font-display)' }}>
               {(review.username ?? review.Username) || 'Unknown member'}
               {isPinned && (
-                <span className="text-xs px-2 py-0.5 border-2 border-ink font-bold" style={{ backgroundColor: '#FFD300' }}>
+                <span className="text-xs px-2 py-0.5 border-2 border-ink font-bold" style={{ backgroundColor: '#A89200' }}>
                   PINNED
                 </span>
               )}

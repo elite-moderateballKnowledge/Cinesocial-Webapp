@@ -4,7 +4,7 @@ export default function Logo({ variant = 'dark', className = '' }) {
   const isLight = variant === 'light';
 
   // For light variant (used on dark backgrounds like Footer): 
-  // Make "CINE" Yellow (#FFD300) and "SOCIAL" White or Yellow as well.
+  // Make "CINE" Yellow (#A89200) and "SOCIAL" White or Yellow as well.
   // For dark variant (used on light backgrounds like NavBar):
   // Make "CINE" Orange (#FF3D00) and "SOCIAL" Black (#000).
 
@@ -16,7 +16,7 @@ export default function Logo({ variant = 'dark', className = '' }) {
     >
       <span 
         style={{ 
-          color: '#FFD300',
+          color: '#A89200',
           WebkitTextStroke: '2px #000',
           paintOrder: 'stroke fill'
         }}

@@ -88,7 +88,7 @@ WHERE a.Action_Type = 'REVIEW';
 **Purpose:** Retrieves a list of all currently active watch parties along with host and movie titles.
 **Used in:** backend/controllers/partyController.js → getActiveParties()
 **Called by route:** GET /api/parties
-**Columns returned:** party_id, party_name, host, movie, current_member_count, max_members, is_active
+**Columns returned:** party_id, party_name, host, movie, current_member_count, max_members, location_description, scheduled_at, is_active
 **SQL:**
 ```sql
 CREATE VIEW vw_ActiveParties AS
@@ -99,11 +99,14 @@ SELECT
     m.Title AS movie, 
     (SELECT COUNT(*) FROM P_Members pm WHERE pm.Party_ID = p.Party_ID) AS current_member_count,
     p.Max_Members AS max_members, 
+    p.Location_Description AS location_description,
+    p.Scheduled_At AS scheduled_at,
     p.Is_Active AS is_active
 FROM Parties p
 JOIN Users u ON p.Created_By = u.User_ID
 JOIN Movies m ON p.Movie_ID = m.Movie_ID
-WHERE p.Is_Active = 1;
+WHERE p.Is_Active = 1
+  AND (p.Scheduled_At IS NULL OR p.Scheduled_At > GETDATE());
 ```
 
 ### vw_PublicLists
@@ -191,7 +194,7 @@ CREATE PROCEDURE sp_UpgradeToPremium
 ### sp_CreateParty
 **File:** database/new_queries.sql (line 155)
 **Purpose:** Creates a watch party and automatically adds the creator as host.
-**Parameters:** @name VARCHAR, @createdBy INT, @movieId INT, @max INT, @inviteCode VARCHAR, @newPartyId INT OUTPUT
+**Parameters:** @name VARCHAR, @createdBy INT, @movieId INT, @max INT, @inviteCode VARCHAR, @location VARCHAR, @scheduledAt DATETIME, @newPartyId INT OUTPUT
 **Used in:** backend/controllers/partyController.js → createParty()
 **Called by route:** POST /api/parties
 **SQL:**
@@ -292,7 +295,7 @@ try {
 
 ### txn_JoinParty
 **File:** backend/controllers/partyController.js → joinParty()
-**Purpose:** Atomically checks if the party is full, inserts the user into P_Members, and updates Parties.Is_Active to false if the max member capacity is reached.
+**Purpose:** Checks the invite code and capacity, prevents duplicate joins, and inserts the user into P_Members.
 **Code Pattern:**
 ```javascript
 const transaction = new sql.Transaction(pool);
@@ -300,7 +303,6 @@ await transaction.begin();
 try {
   // SELECT current counts
   // INSERT INTO P_Members
-  // UPDATE Parties (if full)
   await transaction.commit();
 } catch (err) {
   await transaction.rollback();

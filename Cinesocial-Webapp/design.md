@@ -14,7 +14,7 @@ The goal is to provide a UI that feels like a curated exhibition—where every b
 While the palette is limited, its application must be surgical. We use high-contrast pairings to define function and focus.
 
 ### Color Palette
-- **Primary (`#FFE500` / `#FFD300` per project rules):** High-energy yellow. Used for the most critical actions and focus states. (Note: Project rule overrides primary to `#FFD300`).
+- **Primary (`#A89200` / `#A89200` per project rules):** High-energy yellow. Used for the most critical actions and focus states. (Note: Project rule overrides primary to `#A89200`).
 - **Secondary (`#FF3D00`):** Orange-Red. Used for high-alert signals, destructive actions, or "accent" breaks in a monochromatic flow.
 - **Neutral/Surface (`#F5F5F0`):** A sophisticated off-white that prevents the screen from feeling clinical. 
 - **Text/Borders (`#0A0A0A` / `#000000`):** Near-black. The "ink" that defines the skeleton of the system.
@@ -54,13 +54,13 @@ Traditional shadows are forbidden. We achieve elevation through **Raw Offset Sha
 ## 5. Components
 
 ### Buttons
-- **Primary:** `primary` (#FFD300) background, 4px black border, 8px 8px 0px 0px black offset shadow. Text in Monospace. Zero border radius (except navbar pill button).
+- **Primary:** `primary` (#A89200) background, 4px black border, 8px 8px 0px 0px black offset shadow. Text in Monospace. Zero border radius (except navbar pill button).
 - **Secondary:** `surface` (#F5F5F0) background, 4px black border, 8px black offset shadow.
 - **State Change:** On hover, shadow disappears, element shifts 4px down-right.
 
 ### Form Elements
 - **Inputs:** `surface_container_lowest` (#FFFFFF) background with a 4px black border. 0px border-radius.
-- **Focus State:** When an input is active, it receives a 4px "ghost" offset in `primary` (#FFD300) or a heavy yellow outer stroke.
+- **Focus State:** When an input is active, it receives a 4px "ghost" offset in `primary` (#A89200) or a heavy yellow outer stroke.
 - **Checkboxes/Radios:** Pure geometric shapes. Checkboxes are squares; Radio buttons are nested squares (no circles).
 
 ### Cards & Layout Blocks

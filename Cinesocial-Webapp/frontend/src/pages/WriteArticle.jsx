@@ -104,7 +104,7 @@ export default function WriteArticle() {
 
   // ── Not Cinephile ──
   if (!isCinephile) return (
-    <div className="max-w-2xl mx-auto mt-20 border-4 border-ink text-center overflow-hidden" style={{ boxShadow: '8px 8px 0 0 #FFD300' }}>
+    <div className="max-w-2xl mx-auto mt-20 border-4 border-ink text-center overflow-hidden" style={{ boxShadow: '8px 8px 0 0 #A89200' }}>
       <div className="p-4 bg-ink text-primary border-b-4 border-ink">
         <p className="text-xs font-black tracking-[0.3em]" style={{ fontFamily: 'var(--font-mono)' }}>ACCESS RESTRICTED</p>
       </div>
@@ -122,7 +122,7 @@ export default function WriteArticle() {
 
   // ── Success confirmation ──
   if (submitted) return (
-    <div className="max-w-2xl mx-auto mt-20 border-4 border-ink p-12 text-center" style={{ boxShadow: '8px 8px 0 0 #FFD300' }}>
+    <div className="max-w-2xl mx-auto mt-20 border-4 border-ink p-12 text-center" style={{ boxShadow: '8px 8px 0 0 #A89200' }}>
       <div className="text-6xl mb-6">✅</div>
       <h1 className="text-3xl font-black mb-4" style={{ fontFamily: 'var(--font-serif)' }}>ARTICLE SUBMITTED</h1>
       <p className="opacity-70 mb-2 text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
@@ -179,8 +179,8 @@ export default function WriteArticle() {
                   style={{
                     fontFamily: 'var(--font-display)',
                     backgroundColor: active ? '#000' : 'transparent',
-                    color: active ? '#FFD300' : '#000',
-                    boxShadow: active ? '4px 4px 0 0 #FFD300' : '4px 4px 0 0 #000',
+                    color: active ? '#A89200' : '#000',
+                    boxShadow: active ? '4px 4px 0 0 #A89200' : '4px 4px 0 0 #000',
                     transform: active ? 'translate(-2px,-2px)' : '',
                   }}>
                   {cat}
@@ -267,7 +267,7 @@ export default function WriteArticle() {
         <div className="flex gap-4 flex-wrap pb-8">
           <button type="submit" disabled={submitting}
             className="neo-btn px-10 py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#000', color: '#FFD300' }}>
+            style={{ backgroundColor: '#000', color: '#A89200' }}>
             {submitting ? 'SUBMITTING…' : 'SUBMIT FOR REVIEW →'}
           </button>
           <Link to="/articles" className="border-4 border-ink px-8 py-4 font-black text-sm hover:bg-surface-container transition-colors" style={{ fontFamily: 'var(--font-display)' }}>

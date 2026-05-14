@@ -6,7 +6,7 @@ const CATEGORY_COLORS = {
   EDITORIAL:  '#FF3D00',
   ANALYSIS:   '#00A3E0',
   REVIEW:     '#00C853',
-  'HOT TAKE': '#FFD300',
+  'HOT TAKE': '#A89200',
 };
 
 function formatDate(dateStr) {
@@ -25,9 +25,9 @@ export default function ArticleCard({ article, colorIndex = 0 }) {
     Body,
   } = article;
 
-  const catColor  = CATEGORY_COLORS[Category] ?? '#FFD300';
+  const catColor  = CATEGORY_COLORS[Category] ?? '#A89200';
   // Cycle shadow colours like MovieCard does
-  const SHADOWS   = ['rgba(0,0,0,1)', '#FFD300', '#FF3D00', '#6C3CE1', '#00A3E0', '#00C853'];
+  const SHADOWS   = ['rgba(0,0,0,1)', '#A89200', '#FF3D00', '#6C3CE1', '#00A3E0', '#00C853'];
   const shadow    = SHADOWS[colorIndex % SHADOWS.length];
   const excerpt   = Body ? Body.replace(/\n/g, ' ').substring(0, 120) : '';
 
@@ -96,7 +96,7 @@ export default function ArticleCard({ article, colorIndex = 0 }) {
             {flair_label && (
               <span
                 className="px-1.5 py-0.5 border-2 border-ink text-[10px] font-black"
-                style={{ backgroundColor: '#FFD300', fontFamily: 'var(--font-display)' }}
+                style={{ backgroundColor: '#A89200', fontFamily: 'var(--font-display)' }}
               >
                 {flair_label}
               </span>

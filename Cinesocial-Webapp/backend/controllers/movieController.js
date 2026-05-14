@@ -120,29 +120,77 @@ exports.getMovieById = async (req, res) => {
 };
 
 exports.searchMovies = async (req, res) => {
-  const { q } = req.query;
-  if (!q) {
+  const { q = '', year = '', genreId = '' } = req.query;
+  const trimmed = String(q).trim();
+  const trimmedYear = String(year).trim();
+  const trimmedGenreId = String(genreId).trim();
+
+  if (!trimmed && !trimmedYear && !trimmedGenreId) {
     return res.json([]);
   }
 
   try {
     const pool = await poolPromise;
-    const trimmed = q.trim();
+    const request = pool.request();
+    const filters = [];
 
-    const localPromise = pool
-      .request()
-      .input('query', sql.VarChar, `%${trimmed}%`)
-      .query(`
+    if (trimmed) {
+      request.input('query', sql.VarChar, `%${trimmed}%`);
+      filters.push(`(m.Title LIKE @query OR p.Full_Name LIKE @query)`);
+    }
+
+    if (trimmedYear) {
+      const parsedYear = Number.parseInt(trimmedYear, 10);
+      if (!Number.isInteger(parsedYear) || parsedYear < 1800 || parsedYear > 2200) {
+        return res.status(400).json({ message: 'Year must be a valid four-digit year.' });
+      }
+      request.input('year', sql.Int, parsedYear);
+      filters.push('YEAR(m.Release_date) = @year');
+    }
+
+    if (trimmedGenreId) {
+      const parsedGenreId = Number.parseInt(trimmedGenreId, 10);
+      if (!Number.isInteger(parsedGenreId)) {
+        return res.status(400).json({ message: 'Genre must be valid.' });
+      }
+      request.input('genreId', sql.Int, parsedGenreId);
+      filters.push(`
+        EXISTS (
+          SELECT 1
+          FROM M_Genres mg
+          WHERE mg.M_ID = m.Movie_ID AND mg.G_ID = @genreId
+        )
+      `);
+    }
+
+    const localResult = await request.query(`
         SELECT DISTINCT m.Movie_ID, m.Title, m.Poster_URL, m.Release_date, m.A_Rating, m.M_Type
         FROM Movies m
         LEFT JOIN M_Cast mc ON m.Movie_ID = mc.M_ID
         LEFT JOIN Persons p ON mc.P_ID = p.Person_ID
-        WHERE m.Title LIKE @query
-           OR p.Full_Name LIKE @query
+        WHERE ${filters.join(' AND ')}
+        ORDER BY m.A_Rating DESC, m.Release_date DESC
       `);
 
-    const localResult = await localPromise;
     res.json(normalizeMoviePosters(localResult.recordset));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getGenres = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT G_ID, G_Name
+      FROM Genres
+      ORDER BY G_Name ASC
+    `);
+    res.json(result.recordset.map(genre => ({
+      genre_id: genre.G_ID,
+      genre_name: genre.G_Name,
+    })));
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

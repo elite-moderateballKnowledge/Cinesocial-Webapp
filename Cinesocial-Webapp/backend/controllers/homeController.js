@@ -62,6 +62,8 @@ exports.getHomepage = async (req, res) => {
       newListRows,
       editorialRows,
       topRatedRows,
+      topByGenreRows,
+      newReleaseRows,
     ] = await Promise.all([
 
       // ── featured: highest rated movie that has a poster ──
@@ -130,7 +132,7 @@ exports.getHomepage = async (req, res) => {
 
       // ── top_rated: 5 all-time highest rated movies ──
       pool.request().query(`
-        SELECT TOP 5
+        SELECT TOP 10
           m.Movie_ID, m.Title, m.Release_date, m.Poster_URL,
           m.A_Rating AS avg_rating,
           (SELECT STRING_AGG(g.G_Name, ', ')
@@ -139,6 +141,49 @@ exports.getHomepage = async (req, res) => {
         FROM Movies m
         WHERE m.A_Rating IS NOT NULL
         ORDER BY m.A_Rating DESC
+      `).then(r => r.recordset),
+
+      pool.request().query(`
+        WITH RankedGenreMovies AS (
+          SELECT
+            g.G_ID AS genre_id,
+            g.G_Name AS genre_name,
+            m.Movie_ID,
+            m.Title,
+            m.Release_date,
+            m.Poster_URL,
+            m.A_Rating AS avg_rating,
+            COUNT(*) OVER (PARTITION BY g.G_ID) AS genre_movie_count,
+            ROW_NUMBER() OVER (
+              PARTITION BY g.G_ID
+              ORDER BY m.A_Rating DESC, m.Release_date DESC, m.Movie_ID DESC
+            ) AS genre_rank,
+            (SELECT STRING_AGG(g2.G_Name, ', ')
+             FROM M_Genres mg2 JOIN Genres g2 ON mg2.G_ID = g2.G_ID
+             WHERE mg2.M_ID = m.Movie_ID) AS genres
+          FROM Genres g
+          JOIN M_Genres mg ON g.G_ID = mg.G_ID
+          JOIN Movies m ON mg.M_ID = m.Movie_ID
+          WHERE m.A_Rating IS NOT NULL
+        )
+        SELECT TOP 5
+          genre_id, genre_name, Movie_ID, Title, Release_date,
+          Poster_URL, avg_rating, genre_movie_count, genres
+        FROM RankedGenreMovies
+        WHERE genre_rank = 1
+        ORDER BY avg_rating DESC, genre_movie_count DESC, genre_name ASC
+      `).then(r => r.recordset),
+
+      pool.request().query(`
+        SELECT TOP 8
+          m.Movie_ID, m.Title, m.Release_date, m.Poster_URL,
+          m.A_Rating AS avg_rating,
+          (SELECT STRING_AGG(g.G_Name, ', ')
+           FROM M_Genres mg JOIN Genres g ON mg.G_ID = g.G_ID
+           WHERE mg.M_ID = m.Movie_ID) AS genres
+        FROM Movies m
+        WHERE m.Release_date IS NOT NULL
+        ORDER BY m.Release_date DESC, m.Movie_ID DESC
       `).then(r => r.recordset),
     ]);
 
@@ -181,6 +226,13 @@ exports.getHomepage = async (req, res) => {
       new_lists:       newLists,
       editorial_pick:  editorialRows.length ? toArticleShape(editorialRows[0]) : null,
       top_rated:       topRatedRows.map(toMovieShape),
+      top_by_genre:    topByGenreRows.map(row => ({
+        genre_id: row.genre_id,
+        genre_name: row.genre_name,
+        movie_count: row.genre_movie_count,
+        movie: toMovieShape(row),
+      })),
+      new_releases:    newReleaseRows.map(toMovieShape),
     });
   } catch (err) {
     console.error('getHomepage:', err);

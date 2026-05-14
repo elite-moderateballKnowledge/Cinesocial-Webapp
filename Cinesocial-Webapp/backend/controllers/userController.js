@@ -127,13 +127,13 @@ exports.updateProfile = async (req, res) => {
     }
 
     await pool.request()
-      .input('bio', sql.Text, bio || null)
+      .input('bio', sql.VarChar(sql.MAX), bio || null)
       .input('flairLabel', sql.VarChar, flairLabel || null)
       .input('pic', sql.VarChar, profilePicUrl || null)
       .input('userId', sql.Int, userId)
       .query(`
         UPDATE Users 
-        SET Bio = ISNULL(@bio, Bio),
+        SET Bio = ISNULL(@bio, CAST(Bio AS VARCHAR(MAX))),
             flair_label = ISNULL(@flairLabel, flair_label),
             Profile_Pic_URL = ISNULL(@pic, Profile_Pic_URL)
         WHERE User_ID = @userId
@@ -211,11 +211,11 @@ exports.getFavouriteMovies = async (req, res) => {
     const result = await pool.request()
       .input('userId', sql.Int, userId)
       .query(`
-        SELECT fm.Rank, m.Movie_ID, m.Title, m.Poster_URL, m.A_Rating, m.Release_date
-        FROM FavouriteMovies fm
-        JOIN Movies m ON fm.Movie_ID = m.Movie_ID
-        WHERE fm.User_ID = @userId
-        ORDER BY fm.Rank ASC
+        SELECT uf.Rank, m.Movie_ID, m.Title, m.Poster_URL, m.A_Rating, m.Release_date
+        FROM UserFavorites uf
+        JOIN Movies m ON uf.M_ID = m.Movie_ID
+        WHERE uf.U_ID = @userId
+        ORDER BY uf.Rank ASC
       `);
 
     res.json(result.recordset);
@@ -245,7 +245,7 @@ exports.setFavouriteMovies = async (req, res) => {
       // Wipe existing favourites first
       await transaction.request()
         .input('userId', sql.Int, userId)
-        .query('DELETE FROM FavouriteMovies WHERE User_ID = @userId');
+        .query('DELETE FROM UserFavorites WHERE U_ID = @userId');
 
       // Insert each one — OCP: adding a 4th favourite later only changes this loop limit
       for (const { movieId, rank } of favourites) {
@@ -254,7 +254,7 @@ exports.setFavouriteMovies = async (req, res) => {
           .input('movieId', sql.Int, movieId)
           .input('rank', sql.Int, rank)
           .query(`
-            INSERT INTO FavouriteMovies (User_ID, Movie_ID, Rank)
+            INSERT INTO UserFavorites (U_ID, M_ID, Rank)
             VALUES (@userId, @movieId, @rank)
           `);
       }

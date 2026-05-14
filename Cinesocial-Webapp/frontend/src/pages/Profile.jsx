@@ -375,7 +375,7 @@ export default function Profile() {
                 <div key={slot} className="flex flex-col items-center gap-2 w-36">
                   <div
                     className="w-36 h-52 border-4 border-ink overflow-hidden bg-surface-container flex items-center justify-center"
-                    style={{ boxShadow: '4px 4px 0 0 #FFD300' }}
+                    style={{ boxShadow: '4px 4px 0 0 #A89200' }}
                   >
                     {movie ? (
                       <ImageWithFallback

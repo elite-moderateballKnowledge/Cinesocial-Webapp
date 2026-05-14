@@ -8,6 +8,7 @@ router.get('/popular/:min', movieController.getPopularByReviews);
 router.get('/unreviewed', movieController.getUnreviewedMovies);
 router.get('/average-ratings', movieController.getAverageRatings);
 router.get('/highest-rated', movieController.getHighestRatedMovie);
+router.get('/genres', movieController.getGenres);
 router.get('/genre/:genreId', movieController.getMoviesByGenre);
 router.get('/search', movieController.searchMovies);
 router.get('/:id', movieController.getMovieById);
